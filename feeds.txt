@@ -10,4 +10,4 @@ FleetOwner          | https://www.fleetowner.com/rss.xml
 CCJ                 | https://www.ccjdigital.com/rss
 Overdrive           | https://www.overdriveonline.com/rss
 The Trucker         | https://www.thetrucker.com/feed
-Google News         | https://news.google.com/rss/search?q=trucking+OR+FMCSA+OR+%22truck+drivers%22+when:2d&hl=en-US&gl=US&ceid=US:en
+#Google News         | https://news.google.com/rss/search?q=trucking+OR+FMCSA+OR+%22truck+drivers%22+when:2d&hl=en-US&gl=US&ceid=US:en
