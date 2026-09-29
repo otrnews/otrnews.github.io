@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{SITE_NAME}} | Latest Trucking News</title>
+<meta name="description" content="{{TAGLINE}}">
+<link rel="canonical" href="{{SITE_URL}}/">
+<link rel="alternate" type="application/rss+xml" title="{{SITE_NAME}}" href="{{SITE_URL}}/feed.xml">
+<meta property="og:title" content="{{SITE_NAME}} | Latest Trucking News">
+<meta property="og:description" content="{{TAGLINE}}">
+<meta property="og:url" content="{{SITE_URL}}/">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#00603C">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%2300603C'/><rect x='7' y='7' width='86' height='86' rx='11' fill='none' stroke='white' stroke-width='5'/><text x='50' y='66' font-family='Arial' font-weight='700' font-size='44' fill='white' text-anchor='middle'>OTR</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800;900&display=swap" rel="stylesheet">
+<script type="application/ld+json">{{JSONLD}}</script>
+<style>
+:root{
+  --sign:#00603C; --sign-ink:#fff; --amber:#F2B01E;
+  --paper:#F3F4F1; --ink:#1B211E; --muted:#58625C; --line:#D3D8D2; --card:#fff;
+  --font:"Overpass","Helvetica Neue",Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{--sign:#0B6B44; --paper:#141816; --ink:#E6EAE7; --muted:#9BA6A0; --line:#2B332F; --card:#1B201D}
+}
+*,*::before,*::after{box-sizing:inherit}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 1.0625rem/1.55 var(--font)}
+a{color:inherit}
+.wrap{max-width:46rem;margin:0 auto;padding:0 1.25rem}
+
+/* Masthead: an interstate guide sign */
+.mast{padding-top:1.75rem}
+.sign{position:relative;background:var(--sign);color:var(--sign-ink);border-radius:14px;padding:.45rem}
+.sign-inner{border:3px solid var(--sign-ink);border-radius:9px;padding:1.4rem 1.4rem 1.2rem}
+.tab{position:absolute;top:-1.05rem;right:1.25rem;background:var(--sign);color:var(--sign-ink);
+  border:3px solid var(--sign-ink);border-radius:8px;padding:.18rem .7rem .05rem;font-weight:800;font-size:.8rem;box-shadow:0 0 0 .35rem var(--sign)}
+.logo{margin:0;font-weight:900;font-size:clamp(2.6rem,11vw,4.6rem);line-height:.9;letter-spacing:.01em}
+.logo a{text-decoration:none}
+.tagline{margin:.7rem 0 0;font-weight:600;font-size:1rem;opacity:.92}
+
+/* Filters */
+.filters{display:flex;gap:.5rem;overflow-x:auto;padding:1.25rem 0 .25rem;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.chip{flex:none;font:600 .9rem var(--font);color:var(--ink);background:transparent;border:1.5px solid var(--line);
+  border-radius:999px;padding:.4rem .9rem .3rem;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--sign);border-color:var(--sign);color:var(--sign-ink)}
+.chip:focus-visible,a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* Stories */
+main{padding:.75rem 0 3rem}
+.story{padding:1.1rem 0 1.15rem;border-top:1px solid var(--line);position:relative}
+.story.lead{border-top:0;padding-top:.5rem}
+.story.fresh::before{content:"";position:absolute;left:-.85rem;top:1.25rem;bottom:1.25rem;width:4px;border-radius:2px;background:var(--amber)}
+.story.lead.fresh::before{top:.65rem}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin:0 0 .3rem;font-size:.85rem;color:var(--muted)}
+.cat{color:var(--sign);font-weight:800}
+@media (prefers-color-scheme:dark){.cat{color:#5CC795}}
+.story h2,.story h3{margin:0;font-weight:800;line-height:1.2}
+.story h2{font-size:clamp(1.6rem,5.5vw,2.25rem);line-height:1.12}
+.story h3{font-size:1.2rem}
+.story h2 a,.story h3 a{text-decoration:none}
+.story h2 a:hover,.story h3 a:hover{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+.dek{margin:.4rem 0 0;color:var(--muted);max-width:40rem}
+.lead .dek{font-size:1.1rem;color:var(--ink);opacity:.85}
+.story[hidden]{display:none}
+.empty{color:var(--muted);padding:2rem 0}
+
+footer{border-top:1px solid var(--line);padding-top:1.5rem;padding-bottom:2.5rem;color:var(--muted);font-size:.875rem}
+footer p{margin:.3rem 0}
+@media (prefers-reduced-motion:no-preference){.chip{transition:background .15s,color .15s,border-color .15s}}
+@media (max-width:30rem){.story.fresh::before{left:-.7rem}}
+</style>
+</head>
+<body>
+<header class="mast wrap">
+  <div class="sign">
+    <span class="tab" id="updated" data-time="{{UPDATED_ISO}}">Updated {{UPDATED_TEXT}}</span>
+    <div class="sign-inner">
+      <h1 class="logo"><a href="/">{{SITE_NAME}}</a></h1>
+      <p class="tagline">{{TAGLINE}}</p>
+    </div>
+  </div>
+  <nav class="filters" aria-label="Filter stories by topic">
+    <button type="button" class="chip" data-filter="all" aria-pressed="true">All news</button>{{CHIPS}}
+  </nav>
+</header>
+
+<main class="wrap" id="stories">
+{{LEAD}}
+{{STORIES}}
+</main>
+
+<footer class="wrap">
+  <p>Headlines gathered from {{SOURCE_COUNT}} trucking news sources. Each story links to the original publisher.</p>
+  <p><a href="/feed.xml">RSS feed</a>&ensp;&copy; {{YEAR}} {{SITE_NAME}}</p>
+</footer>
+
+<script>
+(function(){
+  var now = Date.now();
+  function ago(t){
+    var m = Math.round((now - t)/60000);
+    if (m < 1) return "just now";
+    if (m < 60) return m + " min ago";
+    var h = Math.round(m/60);
+    if (h < 24) return h + (h === 1 ? " hour ago" : " hours ago");
+    var d = Math.round(h/24);
+    if (d < 7) return d + (d === 1 ? " day ago" : " days ago");
+    return null;
+  }
+  document.querySelectorAll("time[datetime]").forEach(function(el){
+    var t = Date.parse(el.getAttribute("datetime"));
+    if (isNaN(t)) return;
+    var a = ago(t); if (a) el.textContent = a;
+    if (now - t < 3*3600000) el.closest(".story").classList.add("fresh");
+  });
+  var up = document.getElementById("updated");
+  var ut = Date.parse(up.dataset.time);
+  if (!isNaN(ut)) { var a = ago(ut); if (a) up.textContent = "Updated " + a; }
+
+  var chips = document.querySelectorAll(".chip");
+  var stories = document.querySelectorAll(".story");
+  chips.forEach(function(c){
+    c.addEventListener("click", function(){
+      var f = c.dataset.filter;
+      chips.forEach(function(x){ x.setAttribute("aria-pressed", x === c ? "true" : "false"); });
+      stories.forEach(function(s){ s.hidden = !(f === "all" || s.dataset.cat === f); });
+    });
+  });
+
+  // Pick up new headlines if the page is left open
+  setTimeout(function(){ if (document.visibilityState === "visible") location.reload(); }, 20*60000);
+})();
+</script>
+</body>
+</html>

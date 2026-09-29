@@ -1,0 +1,13 @@
+# OTR News sources — one per line:  Source Name | RSS feed URL
+# Add or remove lines anytime. Lines starting with # are ignored.
+# If a feed stops working, the site skips it and keeps publishing the rest.
+
+FreightWaves        | https://www.freightwaves.com/news/feed
+Transport Topics    | https://www.ttnews.com/rss.xml
+Land Line           | https://landline.media/feed/
+CDLLife             | https://cdllife.com/feed/
+FleetOwner          | https://www.fleetowner.com/rss.xml
+CCJ                 | https://www.ccjdigital.com/rss
+Overdrive           | https://www.overdriveonline.com/rss
+The Trucker         | https://www.thetrucker.com/feed
+Google News         | https://news.google.com/rss/search?q=trucking+OR+FMCSA+OR+%22truck+drivers%22+when:2d&hl=en-US&gl=US&ceid=US:en
