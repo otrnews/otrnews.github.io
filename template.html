@@ -53,7 +53,7 @@ a{color:inherit}
 .chip:focus-visible,a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 
 /* Stories */
-main{padding:.75rem 0 3rem}
+main{padding-top:1rem;padding-bottom:3rem}
 .story{padding:1.1rem 0 1.15rem;border-top:1px solid var(--line);position:relative}
 .story.lead{border-top:0;padding-top:.5rem}
 .story.fresh::before{content:"";position:absolute;left:-.85rem;top:1.25rem;bottom:1.25rem;width:4px;border-radius:2px;background:var(--amber)}
@@ -71,6 +71,15 @@ main{padding:.75rem 0 3rem}
 .story[hidden]{display:none}
 .empty{color:var(--muted);padding:2rem 0}
 
+
+/* Our reporting vs. outside headlines */
+.ours .story h3{font-size:1.35rem}
+.ours:empty{display:none}
+.section-title{font-weight:900;font-size:1.5rem;margin:2.25rem 0 0;padding-top:1.25rem;border-top:4px solid var(--sign)}
+.industry .filters{padding-top:.75rem;padding-bottom:.75rem}
+.industry .story h3{font-size:1.05rem}
+.industry .story .dek{font-size:.95rem}
+
 footer{border-top:1px solid var(--line);padding-top:1.5rem;padding-bottom:2.5rem;color:var(--muted);font-size:.875rem}
 footer p{margin:.3rem 0}
 @media (prefers-reduced-motion:no-preference){.chip{transition:background .15s,color .15s,border-color .15s}}
@@ -86,14 +95,19 @@ footer p{margin:.3rem 0}
       <p class="tagline">{{TAGLINE}}</p>
     </div>
   </div>
-  <nav class="filters" aria-label="Filter stories by topic">
-    <button type="button" class="chip" data-filter="all" aria-pressed="true">All news</button>{{CHIPS}}
-  </nav>
 </header>
 
 <main class="wrap" id="stories">
-{{LEAD}}
+<section class="ours" aria-label="OTR News reports">
+{{ORIGINALS}}
+</section>
+<section class="industry">
+{{INDUSTRY_TITLE}}
+  <nav class="filters" aria-label="Filter headlines by topic">
+    <button type="button" class="chip" data-filter="all" aria-pressed="true">All news</button>{{CHIPS}}
+  </nav>
 {{STORIES}}
+</section>
 </main>
 
 <footer class="wrap">
@@ -125,7 +139,7 @@ footer p{margin:.3rem 0}
   if (!isNaN(ut)) { var a = ago(ut); if (a) up.textContent = "Updated " + a; }
 
   var chips = document.querySelectorAll(".chip");
-  var stories = document.querySelectorAll(".story");
+  var stories = document.querySelectorAll(".industry .story");
   chips.forEach(function(c){
     c.addEventListener("click", function(){
       var f = c.dataset.filter;
