@@ -336,7 +336,7 @@ def load_posts():
             "published": date.isoformat(), "original": True,
             "minutes": max(1, round(words / 230)), "body": markdown(body),
             "image": meta.get("image", ""), "image_alt": meta.get("image_alt", ""),
-            "credit": meta.get("credit", ""), "credit_url": meta.get("credit_url", ""), "section": meta.get("section", "").lower(),
+            "credit": meta.get("credit", ""), "credit_url": meta.get("credit_url", ""), "section": meta.get("section", "").lower(), "partner": meta.get("partner", ""),
         })
     posts.sort(key=lambda p: p["published"], reverse=True)
     return posts
@@ -1272,7 +1272,7 @@ def render_article(p, posts, tpl, pages):
 {share}
 </article>
 {training_box()}
-{"".join(partner_box(x) for x in section_partners(p.get('section', ''))) or partner_box(pick_partner(p['category'], p['slug']))}
+{partner_box(partner_named(p['partner'])) if p.get('partner') and partner_named(p['partner']) else ("".join(partner_box(x) for x in section_partners(p.get('section', ''))) or partner_box(pick_partner(p['category'], p['slug'])))}
 {newsletter_box()}
 {more}
 <a class="back" href="/">All trucking news</a>"""

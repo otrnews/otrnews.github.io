@@ -20,6 +20,7 @@ SEARCHES = [
 ]
 PAGES_PER_SEARCH = 2   # 50 results per page
 MAX_AGE_DAYS = 21
+REFRESH_HOURS = 6       # how often new jobs are pulled (each refresh uses about 12 Adzuna API calls)
 MUST_MATCH = re.compile(r"\b(cdl|truck|tractor|owner[- ]operator|otr|driver)\b", re.I)
 
 def tag(text):
@@ -54,8 +55,8 @@ def main():
     if not os.environ.get("FORCE_JOBS"):
         try:
             last = json.load(open(OUT)).get("updated")
-            if last and (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() < 20 * 3600:
-                print("Jobs were refreshed in the last 20 hours; skipping.")
+            if last and (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() < REFRESH_HOURS * 3600 - 900:
+                print(f"Jobs were refreshed in the last {REFRESH_HOURS} hours; skipping.")
                 return
         except Exception:
             pass
