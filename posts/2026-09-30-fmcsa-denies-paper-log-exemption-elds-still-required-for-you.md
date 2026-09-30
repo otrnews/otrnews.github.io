@@ -4,7 +4,7 @@ date: 2026-09-30T00:15:04+00:00
 summary: FMCSA turned down a driver group's request to let any driver use paper logs. The agency says Congress requires ELDs and it can't grant a blanket exemption.
 category: Regulations
 author: OTR News Staff
-draft: true
+draft: false
 ---
 
 FMCSA has denied a request that would have let drivers go back to paper logbooks. If you're required to keep records of duty status, you still need a compliant ELD. Nothing changes on the road.
