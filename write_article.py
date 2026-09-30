@@ -175,43 +175,58 @@ def used_photo_urls():
     return used
 
 
-def pexels_search(query, key):
-    url = "https://api.pexels.com/v1/search?" + urllib.parse.urlencode(
-        {"query": query, "per_page": 20, "orientation": "landscape"})
-    req = urllib.request.Request(url, headers={"Authorization": key, "User-Agent": "OTRNewsBot/1.0"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.loads(r.read()).get("photos", [])
+def search_photos(query):
+    """Search Pixabay first (PIXABAY_API_KEY), then Pexels (PEXELS_API_KEY). Returns a list of candidate photos."""
+    out = []
+    pix = os.environ.get("PIXABAY_API_KEY", "").strip()
+    if pix:
+        url = "https://pixabay.com/api/?" + urllib.parse.urlencode(
+            {"key": pix, "q": query[:100], "image_type": "photo", "orientation": "horizontal",
+             "safesearch": "true", "per_page": 20})
+        req = urllib.request.Request(url, headers={"User-Agent": "OTRNewsBot/1.0"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            for h in json.loads(r.read()).get("hits", []):
+                out.append({"src": h.get("largeImageURL") or h.get("webformatURL"), "page": h.get("pageURL", "https://pixabay.com"),
+                            "alt": h.get("tags", ""), "credit": f"Image by {h.get('user', 'Pixabay')} from Pixabay"})
+    pex = os.environ.get("PEXELS_API_KEY", "").strip()
+    if pex and not out:
+        url = "https://api.pexels.com/v1/search?" + urllib.parse.urlencode(
+            {"query": query, "per_page": 20, "orientation": "landscape"})
+        req = urllib.request.Request(url, headers={"Authorization": pex, "User-Agent": "OTRNewsBot/1.0"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            for p in json.loads(r.read()).get("photos", []):
+                out.append({"src": p["src"].get("large") or p["src"]["original"], "page": p.get("url", "https://www.pexels.com"),
+                            "alt": p.get("alt", ""), "credit": f"Photo by {p.get('photographer', 'Pexels')} on Pexels"})
+    return [p for p in out if p.get("src")]
 
 
 def fetch_photo(query, slug, backup=""):
-    """Find a free trucking photo on Pexels that matches the story. Needs the PEXELS_API_KEY secret; skipped if missing."""
-    key = os.environ.get("PEXELS_API_KEY", "").strip()
-    if not key:
-        print("No PEXELS_API_KEY secret set; the article will use the topic card image.")
+    """Find a free trucking photo that matches the story. Needs PIXABAY_API_KEY (or PEXELS_API_KEY); skipped if neither is set."""
+    if not (os.environ.get("PIXABAY_API_KEY", "").strip() or os.environ.get("PEXELS_API_KEY", "").strip()):
+        print("No PIXABAY_API_KEY secret set; the article will use the topic card image.")
         return None
     query = (query or "").strip()
     if query and not TRUCK_WORDS.search(query):
         query += " semi truck"   # keep results trucking-related, not generic office stock
     used = used_photo_urls()
     try:
-        for q in [x for x in (query, backup, "semi truck on highway") if x]:
-            photos = [p for p in pexels_search(q, key) if p.get("url") not in used]
+        for q in [x for x in (query, backup, "semi truck highway") if x]:
+            photos = [p for p in search_photos(q) if p["page"] not in used]
             if photos:
                 break
         else:
             return None
         ph = photos[0]
-        src = ph["src"].get("large") or ph["src"]["original"]
-        req = urllib.request.Request(src, headers={"User-Agent": "OTRNewsBot/1.0"})
+        req = urllib.request.Request(ph["src"], headers={"User-Agent": "OTRNewsBot/1.0"})
         with urllib.request.urlopen(req, timeout=60) as r:
             data = r.read()
         IMAGES.mkdir(exist_ok=True)
         name = f"{slug}.jpg"
         (IMAGES / name).write_bytes(data)
         return {"image": f"/images/{name}",
-                "image_alt": (ph.get("alt") or query).replace("\n", " ")[:150],
-                "credit": f"Photo by {ph.get('photographer', 'Pexels')} on Pexels",
-                "credit_url": ph.get("url", "https://www.pexels.com")}
+                "image_alt": (ph["alt"] or query).replace("\n", " ")[:150],
+                "credit": ph["credit"],
+                "credit_url": ph["page"]}
     except Exception as e:
         print(f"Photo search skipped: {e}")
         return None
