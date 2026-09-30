@@ -12,7 +12,11 @@
 <meta property="og:url" content="{{SITE_URL}}/">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#00603C">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%2300603C'/><rect x='7' y='7' width='86' height='86' rx='11' fill='none' stroke='white' stroke-width='5'/><text x='50' y='66' font-family='Arial' font-weight='700' font-size='44' fill='white' text-anchor='middle'>OTR</text></svg>">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta property="og:image" content="{{SITE_URL}}/og.png">
+<meta property="og:site_name" content="{{SITE_NAME}}">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -80,6 +84,14 @@ main{padding-top:1rem;padding-bottom:3rem}
 .industry .story h3{font-size:1.05rem}
 .industry .story .dek{font-size:.95rem}
 
+
+/* Newsletter signup */
+.signup{margin:2rem 0 .5rem;padding:1.25rem 1.25rem 1.35rem;background:var(--sign);color:var(--sign-ink);border-radius:14px}
+.signup h2{margin:0 0 .3rem;font-weight:900;font-size:1.35rem}
+.signup p{margin:0 0 .9rem;opacity:.92}
+.btn{display:inline-block;background:var(--amber);color:#1B211E;font-weight:800;text-decoration:none;border-radius:999px;padding:.55rem 1.2rem .45rem}
+.btn:hover{filter:brightness(1.05)}
+footer a{color:inherit}
 footer{border-top:1px solid var(--line);padding-top:1.5rem;padding-bottom:2.5rem;color:var(--muted);font-size:.875rem}
 footer p{margin:.3rem 0}
 @media (prefers-reduced-motion:no-preference){.chip{transition:background .15s,color .15s,border-color .15s}}
@@ -101,6 +113,7 @@ footer p{margin:.3rem 0}
 <section class="ours" aria-label="OTR News reports">
 {{ORIGINALS}}
 </section>
+{{NEWSLETTER}}
 <section class="industry">
 {{INDUSTRY_TITLE}}
   <nav class="filters" aria-label="Filter headlines by topic">
@@ -111,8 +124,9 @@ footer p{margin:.3rem 0}
 </main>
 
 <footer class="wrap">
-  <p>Headlines gathered from {{SOURCE_COUNT}} trucking news sources. Each story links to the original publisher.</p>
-  <p><a href="/feed.xml">RSS feed</a>&ensp;&copy; {{YEAR}} {{SITE_NAME}}</p>
+  <p>{{FOOTER_LINKS}}</p>
+  <p>Our own reporting, plus headlines from {{SOURCE_COUNT}} trucking news outlets. Outside headlines link to the original publisher.</p>
+  <p>&copy; {{YEAR}} {{SITE_NAME}}</p>
 </footer>
 
 <script>

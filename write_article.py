@@ -47,6 +47,11 @@ Rules:
   say so. Never invent quotes, numbers, names, or dates.
 - Prefer primary sources (FMCSA, DOT, Federal Register, courts, company statements).
 - Plain, direct language a driver would use. No hype, no filler.
+- Write as a newsroom, in the third person. Never use "I" or "we", never address the
+  editor, and never mention your research process, searches, or what you could not find.
+  If a detail is unconfirmed, say so in reader-facing terms, for example
+  "FMCSA had not published the notice as of Tuesday."
+- The headline must not contain a colon. Use plain words instead.
 - Structure: a short opening that says what happened and why it matters; sections with
   "## " headings; a "## What to do" section with practical steps when relevant; a one-line
   **Bottom line:**; then "## Sources" with 2-5 markdown links you actually used.
@@ -133,6 +138,17 @@ def main():
     if "draft:" not in head:
         head = head.rstrip() + "\ndraft: true\n"
     article = head + article[head_end:]
+
+    # House-style cleanup: no colons in the headline/summary, no notes to the editor
+    def no_colon(m):
+        return m.group(1) + m.group(2).replace(": ", " — ")
+    article = re.sub(r"^(title:\s*|summary:\s*)(.+)$", no_colon, article, flags=re.M)
+    head_end = article.find("---", 3)
+    body = article[head_end + 3:]
+    paras = re.split(r"\n\s*\n", body)
+    note = re.compile(r"^(I|We)\b|\b(I (did|could|was|found|searched|couldn't|didn't))\b|\bmy (research|search)", re.I)
+    kept = [p for p in paras if not note.search(p.strip())]
+    article = article[:head_end + 3] + "\n\n".join(kept)
 
     title = re.search(r"^title:\s*(.+)$", article, re.M).group(1).strip().strip('"')
     slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:60].rstrip("-")
