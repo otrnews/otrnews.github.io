@@ -763,64 +763,157 @@ JOBS_FILE = ROOT / "data" / "jobs.json"
 JOB_TYPES = [("", "All jobs"), ("otr", "OTR"), ("regional", "Regional"), ("local", "Local / home daily"), ("owner", "Owner-operator / lease")]
 
 JOBS_CSS = """<style>
+.jobs-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:.5rem;margin-top:1.5rem}
+.jobs-head h2{margin:0}
+.jobs-count{font-weight:700;color:#0a6b47}
 .jobs-tools{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}
-.jobs-tools input{flex:1 1 14rem;font:inherit;padding:.6rem .75rem;border:1px solid #cfd6d2;border-radius:8px}
-.jobs-tools button{font:inherit;padding:.45rem .8rem;border:1px solid #cfd6d2;border-radius:999px;background:transparent;cursor:pointer;color:inherit}
+.jobs-tools input{flex:1 1 100%;font:inherit;padding:.7rem .85rem;border:1px solid #cfd6d2;border-radius:10px}
+.jobs-tools button{font:inherit;font-size:.9rem;padding:.4rem .8rem;border:1px solid #cfd6d2;border-radius:999px;background:transparent;cursor:pointer;color:inherit}
 .jobs-tools button[aria-pressed="true"]{background:#0a6b47;border-color:#0a6b47;color:#fff}
-.job{padding:1rem 0;border-bottom:1px solid #e3e8e5}
-.job h3{margin:.1rem 0 .25rem;font-size:1.08rem}
-.job .pay{font-weight:700;color:#0a6b47}
-.job p{margin:.25rem 0}
+.jobcard{display:grid;grid-template-columns:3rem 1fr;gap:.25rem .9rem;padding:1rem;margin:.75rem 0;border:1px solid #dfe5e1;border-radius:12px;background:#fff}
+.jobcard .logo{grid-row:span 3;width:3rem;height:3rem;border-radius:10px;background:#0a6b47;color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.25rem}
+.jobcard h3{margin:0;font-size:1.08rem;line-height:1.3}
+.jobcard h3 a{color:inherit;text-decoration:none}
+.jobcard .co{margin:0;font-size:.93rem;opacity:.8}
+.jobcard .tags{display:flex;flex-wrap:wrap;gap:.35rem;margin:.35rem 0 0}
+.tag{font-size:.78rem;font-weight:700;padding:.15rem .55rem;border-radius:999px;background:#e8f1ec;color:#0a6b47}
+.tag.pay{background:#fff3cc;color:#6b4e00}
+.tag.new{background:#0a6b47;color:#fff}
+.jobcard .go{grid-column:2;justify-self:start;margin-top:.5rem}
+.jobdetail .facts{display:flex;flex-wrap:wrap;gap:.4rem;margin:.75rem 0 1.25rem}
+.jobdetail .apply{margin:1.25rem 0 .5rem}
+@media (prefers-color-scheme: dark){.jobcard{background:transparent;border-color:#3a3f45}.tag{background:#1f3a2e;color:#9fe0bf}}
 </style>"""
+JOB_TYPE_LABEL = {"otr": "OTR", "regional": "Regional", "local": "Local / home daily", "owner": "Owner-operator"}
+JOB_TYPES = [("", "All jobs"), ("otr", "OTR"), ("regional", "Regional"), ("local", "Local / home daily"), ("owner", "Owner-operator / lease")]
 
 
-def jobs_html():
-    """Job listings from data/jobs.json (refreshed daily by fetch_jobs.py)."""
+def load_jobs():
     try:
         data = json.loads(JOBS_FILE.read_text())
     except Exception:
-        return ""
+        return None, []
     jobs = data.get("jobs") or []
+    for j in jobs:
+        if not j.get("id"):
+            j["id"] = str(__import__("zlib").crc32(j.get("url", "").encode()))
+        j["slug"] = slugify(f'{j.get("title", "")} {j.get("location", "")}')[:60].strip("-") + "-" + str(j["id"])
+    return data.get("updated"), jobs
+
+
+def posted_label(iso):
+    try:
+        days = (datetime.now(timezone.utc) - datetime.fromisoformat(iso.replace("Z", "+00:00"))).days
+    except Exception:
+        return ""
+    return "Posted today" if days <= 0 else ("Posted yesterday" if days == 1 else f"Posted {days} days ago")
+
+
+def job_tags(j):
+    tags = "".join(f'<span class="tag">{esc(JOB_TYPE_LABEL[t])}</span>' for t in j.get("tags", []) if t in JOB_TYPE_LABEL)
+    if j.get("pay"):
+        tags = f'<span class="tag pay">{esc(j["pay"])}</span>' + tags
+    try:
+        if (datetime.now(timezone.utc) - datetime.fromisoformat(j["posted"].replace("Z", "+00:00"))).days <= 2:
+            tags = '<span class="tag new">New</span>' + tags
+    except Exception:
+        pass
+    return tags
+
+
+def jobs_html():
+    """The OTR News job board, from data/jobs.json (refreshed daily by fetch_jobs.py)."""
+    updated, jobs = load_jobs()
     if not jobs:
         return ""
-    updated = ""
-    if data.get("updated"):
-        updated = f' Updated {datetime.fromisoformat(data["updated"]).strftime("%b %-d, %Y")}.'
     chips = "".join(f'<button type="button" data-type="{k}" aria-pressed="{"true" if not k else "false"}">{esc(t)}</button>'
                     for k, t in JOB_TYPES)
-    rows = []
+    cards = []
     for j in jobs[:150]:
-        pay = f'<span class="pay">{esc(j["pay"])}</span> ' if j.get("pay") else ""
-        rows.append(f"""<article class="job" data-tags="{esc(" ".join(j.get("tags", [])))}">
-<p class="meta">{esc(j.get("company", ""))} &middot; {esc(j.get("location", ""))}</p>
-<h3><a href="{esc(j["url"])}" target="_blank" rel="noopener nofollow">{esc(j["title"])}</a></h3>
-<p>{pay}{esc(j.get("snippet", ""))}</p>
+        initial = esc((j.get("company") or "?").strip()[:1].upper())
+        cards.append(f"""<article class="jobcard" data-tags="{esc(" ".join(j.get("tags", [])))}">
+<span class="logo" aria-hidden="true">{initial}</span>
+<h3><a href="/jobs/{j["slug"]}/">{esc(j["title"])}</a></h3>
+<p class="co">{esc(j.get("company", ""))} &middot; {esc(j.get("location", ""))} &middot; {esc(posted_label(j.get("posted", "")))}</p>
+<div class="tags">{job_tags(j)}</div>
+<a class="btn btn-alt go" href="/jobs/{j["slug"]}/">View job</a>
 </article>""")
-    return f"""<h2 class="section-title" id="jobs">Trucking jobs, updated daily</h2>
-<p class="fine">{len(jobs)} CDL openings from across the US.{updated} Listings link to the original posting. Confirm pay and terms with the company before you apply.</p>
+    return f"""<div class="jobs-head" id="jobs"><h2 class="section-title">OTR News Job Board</h2><span class="jobs-count">{len(jobs)} open driving jobs</span></div>
+<p class="fine">CDL-A, regional, local, and owner-operator jobs, updated every morning.</p>
 <div class="jobs-tools"><input type="search" id="jobq" placeholder="Search by company, city, or keyword" aria-label="Search jobs">{chips}</div>
-<div id="joblist">{"".join(rows)}</div>
+<div id="joblist">{"".join(cards)}</div>
 <p class="fine" id="jobnone" hidden>No jobs match that search. Try a different word or job type.</p>
-<p class="fine">Job listings by <a href="https://www.adzuna.com" target="_blank" rel="noopener">Adzuna</a>.</p>
+<p class="fine">Job data powered by <a href="https://www.adzuna.com" target="_blank" rel="noopener">Adzuna</a>.</p>
 <script>(function(){{var q=document.getElementById('jobq'),t='',bs=document.querySelectorAll('.jobs-tools button');
-function run(){{var s=q.value.toLowerCase(),n=0;document.querySelectorAll('#joblist .job').forEach(function(j){{
+function run(){{var s=q.value.toLowerCase(),n=0;document.querySelectorAll('#joblist .jobcard').forEach(function(j){{
 var ok=(!t||(' '+j.dataset.tags+' ').indexOf(' '+t+' ')>-1)&&(!s||j.textContent.toLowerCase().indexOf(s)>-1);j.hidden=!ok;if(ok)n++;}});
 document.getElementById('jobnone').hidden=n>0;}}
 q.addEventListener('input',run);bs.forEach(function(b){{b.addEventListener('click',function(){{t=b.dataset.type;
 bs.forEach(function(x){{x.setAttribute('aria-pressed',x===b?'true':'false');}});run();}});}});}})();</script>"""
 
 
-def section_page(key, posts):
+def job_page(j):
+    desc = esc(j.get("description") or j.get("snippet", ""))
+    return f"""<article class="jobdetail">
+<p class="meta"><a class="cat" href="/jobs/">OTR News Job Board</a></p>
+<h1>{esc(j["title"])}</h1>
+<p class="deck">{esc(j.get("company", ""))} &middot; {esc(j.get("location", ""))}</p>
+<div class="facts tags">{job_tags(j)}<span class="tag">{esc(posted_label(j.get("posted", "")))}</span></div>
+<div class="body"><h2>About this job</h2><p>{desc}</p></div>
+<p class="apply"><a class="btn" href="{esc(j["url"])}" target="_blank" rel="noopener nofollow">Apply now</a></p>
+<p class="fine">You'll finish your application on the hiring company's site. Confirm pay, home time, and any contract terms before you sign. See our guide to <a href="/news/how-to-read-a-trucking-job-ad/">reading a trucking job ad</a>.</p>
+<p class="fine">Job data powered by <a href="https://www.adzuna.com" target="_blank" rel="noopener">Adzuna</a>.</p>
+</article>"""
+
+
+# Which partner goes with each guide section (by partner name in PARTNERS)
+SECTION_PARTNER = {"finance": ["DAT Outgo Factoring", "Zoho"], "insurance": ["Bluewhale Insurance Group"],
+                   "health": ["Truck Parking Club"], "repairs": ["Roadside Masters"], "jobs": ["DAT Load Board"]}
+
+# Job boards linked from the Jobs page (not partners, no commission)
+JOB_BOARDS = [
+    ("Indeed", "https://www.indeed.com/", "Search CDL-A, local, and OTR driving jobs near you."),
+    ("CDLjobs.com", "https://www.cdljobs.com/", "Trucking-only job board with company driver and owner-operator openings."),
+    ("ZipRecruiter", "https://www.ziprecruiter.com/", "Driving jobs from carriers and staffing companies across the US."),
+]
+
+
+def partner_named(name):
+    return next((p for p in PARTNERS if p.get("name") == name and p.get("url")), None)
+
+
+def section_partners(key, fallback_topic=""):
+    found = [p for p in (partner_named(n) for n in SECTION_PARTNER.get(key, [])) if p]
+    if not found and fallback_topic:
+        found = [pick_partner(fallback_topic, key)]
+    return [p for p in found if p]
+
+
+def job_boards_html():
+    rows = "".join(f'<li><a href="{esc(u)}" target="_blank" rel="noopener"><strong>{esc(n)}</strong></a> &mdash; {esc(d)}</li>'
+                   for n, u, d in JOB_BOARDS)
+    return f'<section class="tool-card"><h2>More places to find driving jobs</h2><ul>{rows}</ul></section>'
+
+
+def section_page(key, posts, items=()):
     title, intro, topics = SECTIONS[key]
     ours = [p for p in posts if p.get("section") == key or (key == "training" and p["category"] == "Training")]
     body = f'<h1>{esc(title)}</h1>\n<p class="deck">{esc(intro)}</p>'
+    partners = section_partners(key, topics[0]) if key != "training" else []
+    if key == "jobs":
+        body += jobs_html() or ('<h2 class="section-title" id="jobs">OTR News Job Board</h2>'
+                                '<p class="fine">New job listings load every morning. Check back soon, or try the job boards below.</p>')
+        body += "".join(partner_box(p) for p in partners)
+        body += job_boards_html()
+        partners = []
     if ours:
-        body += "".join(story_html(p, n == 0) for n, p in enumerate(ours))
+        body += '<h2 class="section-title">Guides</h2>' + "".join(story_html(p, n == 0) for n, p in enumerate(ours))
     else:
         body += '<p class="empty">New guides are on the way. In the meantime, try our free tools.</p>'
-    if key == "jobs":
-        body += jobs_html()
-    body += partner_box(pick_partner(topics[0], key)) if key != "training" else ""
+    body += "".join(partner_box(p) for p in partners)
+    news = [i for i in items if i.get("category") in topics and not i.get("original")][:8]
+    if news:
+        body += f'<h2 class="section-title">Latest {esc(title.lower())} news</h2>' + "".join(story_html(i) for i in news)
     body += training_box()
     return title, intro, body
 
@@ -1179,7 +1272,7 @@ def render_article(p, posts, tpl, pages):
 {share}
 </article>
 {training_box()}
-{partner_box(pick_partner(p['category'], p['slug']))}
+{"".join(partner_box(x) for x in section_partners(p.get('section', ''))) or partner_box(pick_partner(p['category'], p['slug']))}
 {newsletter_box()}
 {more}
 <a class="back" href="/">All trucking news</a>"""
@@ -1395,7 +1488,7 @@ def main():
         path="/tools/cdl-practice-test/", body=QUIZ_HTML.replace("%QUIZ_JSON%", qjson) + training_box(), extra_css=QUIZ_CSS))
     gl = []
     for key in SECTIONS:
-        title, intro, body = section_page(key, posts)
+        title, intro, body = section_page(key, posts, items)
         out = SITE / key
         if key == "training":
             gl.append(f'<section class="tool-card"><h2><a href="/training/">{esc(title)}</a></h2><p>{esc(intro)}</p></section>')
@@ -1404,10 +1497,20 @@ def main():
         (out / "index.html").write_text(shell(tpl, pages, title=title, description=intro, path=f"/{key}/", body=body,
                                               extra_css=JOBS_CSS if key == "jobs" else ""))
         gl.append(f'<section class="tool-card"><h2><a href="/{key}/">{esc(title)}</a></h2><p>{esc(intro)}</p></section>')
+    _, all_jobs = load_jobs()
+    dat = partner_named("DAT Load Board")
+    for j in all_jobs[:150]:
+        out = SITE / "jobs" / j["slug"]
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "index.html").write_text(shell(tpl, pages, title=f'{j["title"]} in {j.get("location", "")}',
+            description=(j.get("snippet") or "")[:155], path=f'/jobs/{j["slug"]}/',
+            body=job_page(j) + partner_box(dat) + '<a class="back" href="/jobs/">All trucking jobs</a>', extra_css=JOBS_CSS))
     out = SITE / "guides"
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(shell(tpl, pages, title="Trucking guides", description="Practical guides for truck drivers and owner-operators.",
-        path="/guides/", body='<h1>Guides</h1><p class="deck">Practical, plain-English guides for drivers and owner-operators.</p>' + "".join(gl)))
+        path="/guides/", body='<h1>Guides</h1><p class="deck">Practical, plain-English guides for drivers and owner-operators.</p>' + "".join(gl)
+        + (('<h2 class="section-title">Latest guides</h2>' + "".join(story_html(p, n == 0) for n, p in enumerate(
+            [p for p in posts if p.get("section")][:12]))) if any(p.get("section") for p in posts) else "")))
     img_src = ROOT / "images"
     if img_src.exists():
         dest = SITE / "images"

@@ -51,6 +51,14 @@ def main():
     if not APP_ID or not APP_KEY:
         print("No ADZUNA_APP_ID / ADZUNA_APP_KEY secrets set; skipping the jobs update.")
         return
+    if not os.environ.get("FORCE_JOBS"):
+        try:
+            last = json.load(open(OUT)).get("updated")
+            if last and (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds() < 20 * 3600:
+                print("Jobs were refreshed in the last 20 hours; skipping.")
+                return
+        except Exception:
+            pass
     seen, jobs = set(), []
     for what in SEARCHES:
         for page in range(1, PAGES_PER_SEARCH + 1):
@@ -69,7 +77,9 @@ def main():
                     "company": company,
                     "location": (j.get("location") or {}).get("display_name", ""),
                     "pay": pay(j),
+                    "id": str(j.get("id", "")),
                     "snippet": re.sub("<[^>]+>", "", desc)[:260].rstrip() + "…",
+                    "description": re.sub("<[^>]+>", "", desc).strip(),
                     "url": j.get("redirect_url"),
                     "posted": j.get("created"),
                     "tags": tag(title + " " + desc),
