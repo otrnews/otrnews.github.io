@@ -1,0 +1,32 @@
+name: Write weekly briefing
+
+on:
+  schedule:
+    - cron: "0 11 * * 1"   # every Monday, about 7 a.m. Eastern
+  workflow_dispatch:        # "Run workflow" button to write one now
+
+permissions:
+  contents: write
+
+concurrency:
+  group: otrnews
+  cancel-in-progress: false
+
+jobs:
+  write:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Write the briefing and community posts
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python write_briefing.py
+      - name: Save
+        run: |
+          git config user.name "otrnews-bot"
+          git config user.email "otrnews-bot@users.noreply.github.com"
+          git add briefings
+          git diff --staged --quiet || (git commit -m "Weekly briefing" && git pull --rebase && git push)
