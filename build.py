@@ -931,7 +931,7 @@ def section_page(key, posts, items=()):
 # ---------- navigation, topics, tools ----------
 
 NAV = [("/", "Latest"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/guides/", "Guides"), ("/jobs/", "Jobs"),
-       ("/tools/cost-per-mile/", "Cost per mile"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/about/", "About")]
+       ("/tools/cost-per-mile/", "Cost per mile"), ("/courses/", "Courses"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/about/", "About")]
 
 
 def nav_html(current=""):
@@ -1061,7 +1061,7 @@ def footer_links(pages):
     links = [("/about/", "About")]
     if "contact" in pages:
         links.append(("/contact/", "Contact"))
-    links += [("/app/", "Get the app"), ("/privacy/", "Privacy"), ("/feed.xml", "RSS")]
+    links += [("/briefing/", "Briefing"), ("/courses/", "Free courses"), ("/app/", "Get the app"), ("/privacy/", "Privacy"), ("/feed.xml", "RSS")]
     return "&ensp;".join(f'<a href="{u}">{t}</a>' for u, t in links)
 
 
@@ -1367,7 +1367,8 @@ def question_of_the_day():
 
 
 def tools_strip():
-    tiles = [("/tools/cdl-practice-test/", "CDL practice test", "49 questions with explanations"),
+    tiles = [("/courses/", "Free CDL courses", "12 lessons with quizzes"),
+             ("/tools/cdl-practice-test/", "CDL practice test", "49 questions with explanations"),
              ("/tools/cost-per-mile/", "Cost per mile", "Find your break-even rate"),
              ("/guides/", "Guides", "Money, health, repairs, jobs"),
              ("/toolkit/", "Driver toolkit", "Services we recommend"),
@@ -1477,6 +1478,169 @@ def write_app_files(tpl, pages):
     (out / "index.html").write_text(shell(tpl, pages, title="Get the OTR News app",
         description="Install OTR News on your phone: trucking news, CDL jobs, and free driver tools on your home screen.",
         path="/app/", body=APP_PAGE + newsletter_box()))
+
+
+try:
+    from courses_content import COURSES
+except Exception:
+    COURSES = []
+
+COURSE_CSS = """<style>
+.course-list{list-style:none;padding:0;margin:1rem 0;display:grid;gap:.6rem}
+.course-list a{display:grid;grid-template-columns:2.2rem 1fr;gap:.2rem .8rem;align-items:center;padding:.85rem 1rem;border:1px solid #dfe5e1;border-radius:12px;text-decoration:none;color:inherit;background:#fff}
+.course-list .num{grid-row:span 2;width:2.2rem;height:2.2rem;border-radius:50%;display:grid;place-items:center;background:#e8f1ec;color:#00603C;font-weight:800}
+.course-list .done .num{background:#00603C;color:#fff}
+.course-list strong{font-size:1.05rem}
+.course-list span.sub{font-size:.9rem;opacity:.75}
+.progress{height:.5rem;border-radius:999px;background:#e3e8e5;overflow:hidden;margin:.5rem 0 1rem}
+.progress i{display:block;height:100%;width:0;background:#00603C;transition:width .3s}
+.lq{border:2px solid #00603C;border-radius:14px;padding:1rem 1.1rem;margin:2rem 0}
+.lq h2{margin-top:0}
+.lq-q{margin:1.1rem 0}
+.lq-q p.qt{font-weight:800;margin:.2rem 0 .5rem}
+.lq-a{display:block;width:100%;text-align:left;font:inherit;padding:.6rem .8rem;margin:.35rem 0;border:1px solid #cfd6d2;border-radius:10px;background:#fff;color:inherit;cursor:pointer}
+.lq-a.right{border-color:#00603C;background:#e8f1ec}
+.lq-a.wrong{border-color:#b3261e;background:#fbeaea}
+.lq-why{font-size:.95rem;margin:.4rem 0 0}
+.lq-result{font-weight:800;font-size:1.1rem}
+.lesson-nav{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.75rem;margin:1.5rem 0}
+@media (prefers-color-scheme: dark){.course-list a,.lq-a{background:transparent;border-color:#3a3f45}.lq-a.right{background:#1f3a2e}.lq-a.wrong{background:#3a1f1f}}
+</style>"""
+
+COURSE_NOTE = ('<p class="fine">Free study material based on the state CDL manual, to help you prepare for the CDL knowledge tests. '
+               'This is not Entry-Level Driver Training (ELDT). New Class A and B drivers must complete ELDT from a provider on FMCSA\'s Training Provider Registry.</p>')
+
+PROGRESS_JS = """<script>(function(){var K='otr-course-progress';var d={};try{d=JSON.parse(localStorage.getItem(K)||'{}')}catch(e){}
+document.querySelectorAll('[data-lesson]').forEach(function(el){if(d[el.dataset.lesson])el.classList.add('done');});
+document.querySelectorAll('[data-course]').forEach(function(el){var ids=el.dataset.lessons.split(' '),n=ids.filter(function(i){return d[i]}).length;
+var b=el.querySelector('.progress i');if(b)b.style.width=(100*n/ids.length)+'%';var t=el.querySelector('.ptext');if(t)t.textContent=n+' of '+ids.length+' lessons complete';});})();</script>"""
+
+
+def lesson_id(c, l):
+    return f'{c["slug"]}/{l["slug"]}'
+
+
+def lesson_quiz_html(c, l):
+    qs = []
+    for n, i in enumerate(l["quiz"]):
+        if i >= len(QUIZ):
+            continue
+        cat, q, answers, why = QUIZ[i]
+        order = sorted(range(len(answers)), key=lambda k: (k * 5 + n + i) % len(answers))
+        btns = "".join(f'<button type="button" class="lq-a" data-ok="{1 if k == 0 else 0}">{esc(answers[k])}</button>' for k in order)
+        qs.append(f'<div class="lq-q"><p class="qt">{n + 1}. {esc(q)}</p>{btns}<p class="lq-why" hidden><strong></strong> {esc(why)}</p></div>')
+    return f"""<section class="lq" id="quiz" data-id="{esc(lesson_id(c, l))}">
+<h2>Check what you learned</h2>
+{"".join(qs)}
+<p class="lq-result" hidden></p>
+</section>
+<script>(function(){{var box=document.getElementById('quiz'),K='otr-course-progress',total=box.querySelectorAll('.lq-q').length,got=0,done=0;
+box.querySelectorAll('.lq-q').forEach(function(q){{q.querySelectorAll('.lq-a').forEach(function(b){{b.addEventListener('click',function(){{
+if(q.dataset.done)return;q.dataset.done=1;done++;var ok=b.dataset.ok==='1';if(ok)got++;
+q.querySelectorAll('.lq-a').forEach(function(x){{x.disabled=true;if(x.dataset.ok==='1')x.classList.add('right');}});if(!ok)b.classList.add('wrong');
+var w=q.querySelector('.lq-why');w.querySelector('strong').textContent=ok?'Correct.':'Not quite.';w.hidden=false;
+if(done===total){{var r=box.querySelector('.lq-result');r.hidden=false;r.textContent='You got '+got+' of '+total+' right.'+(got===total?' Lesson complete!':' Review the lesson and try again anytime.');
+if(got===total){{try{{var d=JSON.parse(localStorage.getItem(K)||'{{}}');d[box.dataset.id]=1;localStorage.setItem(K,JSON.stringify(d));}}catch(e){{}}}}}}}});}});}});}})();</script>"""
+
+
+def course_card(c):
+    ids = " ".join(lesson_id(c, l) for l in c["lessons"])
+    return (f'<section class="tool-card" data-course data-lessons="{esc(ids)}"><h2><a href="/courses/{c["slug"]}/">{esc(c["title"])}</a></h2>'
+            f'<p>{esc(c["blurb"])}</p><div class="progress"><i></i></div><p class="fine ptext">{len(c["lessons"])} lessons with quizzes</p>'
+            f'<a class="btn" href="/courses/{c["slug"]}/">Start course</a></section>')
+
+
+def write_courses(tpl, pages):
+    if not COURSES:
+        return []
+    urls = ["/courses/"]
+    out = SITE / "courses"
+    out.mkdir(parents=True, exist_ok=True)
+    body = ('<h1>Free CDL courses</h1><p class="deck">Short lessons with quizzes on the three CDL knowledge tests most drivers take: '
+            'general knowledge, air brakes, and combination vehicles. Free, no signup, study on your phone.</p>'
+            + "".join(course_card(c) for c in COURSES) + COURSE_NOTE
+            + '<p><a class="btn btn-alt" href="/tools/cdl-practice-test/">Take the full practice test</a></p>' + training_box() + PROGRESS_JS)
+    (out / "index.html").write_text(shell(tpl, pages, title="Free CDL courses: general knowledge, air brakes, combination vehicles",
+        description="Free CDL study courses with short lessons and quizzes on general knowledge, air brakes, and combination vehicles.",
+        path="/courses/", body=body, extra_css=COURSE_CSS))
+    for c in COURSES:
+        ids = " ".join(lesson_id(c, l) for l in c["lessons"])
+        items = "".join(f'<li><a href="/courses/{c["slug"]}/{l["slug"]}/" data-lesson="{esc(lesson_id(c, l))}"><span class="num">{n + 1}</span>'
+                        f'<strong>{esc(l["title"])}</strong><span class="sub">{len(l["quiz"])} quiz questions</span></a></li>'
+                        for n, l in enumerate(c["lessons"]))
+        cbody = (f'<p class="meta"><a class="cat" href="/courses/">Free CDL courses</a></p><h1>{esc(c["title"])}</h1><p class="deck">{esc(c["blurb"])}</p>'
+                 f'<div data-course data-lessons="{esc(ids)}"><div class="progress"><i></i></div><p class="fine ptext"></p></div>'
+                 f'<ol class="course-list">{items}</ol>'
+                 f'<a class="btn" href="/courses/{c["slug"]}/{c["lessons"][0]["slug"]}/">Start lesson 1</a>' + COURSE_NOTE + training_box() + PROGRESS_JS)
+        d = out / c["slug"]
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "index.html").write_text(shell(tpl, pages, title=f'{c["title"]}: free CDL course', description=c["blurb"],
+            path=f'/courses/{c["slug"]}/', body=cbody, extra_css=COURSE_CSS))
+        urls.append(f'/courses/{c["slug"]}/')
+        for n, l in enumerate(c["lessons"]):
+            prev_l = c["lessons"][n - 1] if n else None
+            next_l = c["lessons"][n + 1] if n + 1 < len(c["lessons"]) else None
+            nav = '<nav class="lesson-nav">'
+            nav += (f'<a class="btn btn-alt" href="/courses/{c["slug"]}/{prev_l["slug"]}/">&larr; {esc(prev_l["title"])}</a>' if prev_l
+                    else f'<a class="btn btn-alt" href="/courses/{c["slug"]}/">&larr; Course overview</a>')
+            nav += (f'<a class="btn" href="/courses/{c["slug"]}/{next_l["slug"]}/">Next: {esc(next_l["title"])} &rarr;</a>' if next_l
+                    else '<a class="btn" href="/courses/">Finish: see all courses &rarr;</a>')
+            nav += '</nav>'
+            lbody = (f'<article><p class="meta"><a class="cat" href="/courses/{c["slug"]}/">{esc(c["title"])}</a> <span>Lesson {n + 1} of {len(c["lessons"])}</span></p>'
+                     f'<h1>{esc(l["title"])}</h1><div class="body">{markdown(l["body"].strip())}</div></article>'
+                     + lesson_quiz_html(c, l) + nav + newsletter_box() + training_box())
+            ld = {"@context": "https://schema.org", "@type": "LearningResource", "name": l["title"], "educationalLevel": "Beginner",
+                  "learningResourceType": "Lesson", "isAccessibleForFree": True, "inLanguage": "en-US",
+                  "isPartOf": {"@type": "Course", "name": c["title"], "description": c["blurb"],
+                               "provider": {"@type": "Organization", "name": SITE_NAME, "sameAs": SITE_URL}}}
+            ld_dir = d / l["slug"]
+            ld_dir.mkdir(parents=True, exist_ok=True)
+            (ld_dir / "index.html").write_text(shell(tpl, pages, title=f'{l["title"]} | {c["title"]}',
+                description=f'Free CDL lesson: {l["title"].lower()}. Short lesson and {len(l["quiz"])}-question quiz.',
+                path=f'/courses/{c["slug"]}/{l["slug"]}/', body=lbody, ld=ld, extra_css=COURSE_CSS))
+            urls.append(f'/courses/{c["slug"]}/{l["slug"]}/')
+    return urls
+
+
+BRIEFINGS = ROOT / "briefings"
+
+
+def load_briefings():
+    out = []
+    for f in sorted(BRIEFINGS.glob("*.md"), reverse=True) if BRIEFINGS.exists() else []:
+        text = f.read_text(encoding="utf-8")
+        meta, body = {}, text
+        if text.startswith("---"):
+            end = text.find("---", 3)
+            for line in text[3:end].splitlines():
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    meta[k.strip()] = v.strip().strip('"')
+            body = text[end + 3:]
+        out.append({"slug": f.stem, "title": meta.get("title", f"OTR News Briefing {f.stem}"),
+                    "preview": meta.get("preview", ""), "date": meta.get("date", f.stem), "body": body.strip()})
+    return out
+
+
+def write_briefings(tpl, pages):
+    items = load_briefings()
+    out = SITE / "briefing"
+    out.mkdir(parents=True, exist_ok=True)
+    lst = "".join(f'<section class="tool-card"><h2><a href="/briefing/{b["slug"]}/">{esc(b["title"])}</a></h2><p>{esc(b["preview"])}</p></section>' for b in items)
+    body = ('<h1>The OTR News Briefing</h1><p class="deck">Every Monday: the trucking news that mattered, new driving jobs, and a guide worth your time.</p>'
+            + newsletter_box() + (lst or '<p class="empty">The first briefing arrives Monday.</p>'))
+    (out / "index.html").write_text(shell(tpl, pages, title="The OTR News Briefing", description="Weekly trucking news briefing: top stories, new CDL jobs, and guides.",
+        path="/briefing/", body=body))
+    urls = ["/briefing/"]
+    for b in items:
+        d = out / b["slug"]
+        d.mkdir(parents=True, exist_ok=True)
+        bb = (f'<article><p class="meta"><a class="cat" href="/briefing/">OTR News Briefing</a> <span>{esc(b["date"][:10])}</span></p>'
+              f'<h1>{esc(b["title"])}</h1><div class="body">{markdown(b["body"])}</div></article>' + newsletter_box() + training_box())
+        (d / "index.html").write_text(shell(tpl, pages, title=b["title"], description=b["preview"] or "Weekly trucking news briefing.",
+            path=f'/briefing/{b["slug"]}/', body=bb, og_type="article"))
+        urls.append(f'/briefing/{b["slug"]}/')
+    return urls
 
 
 def main():
@@ -1614,6 +1778,7 @@ def main():
         (SITE / "cards" / name).write_bytes(base64.b64decode(data))
 
     write_app_files(tpl, pages)
+    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages)
     (SITE / "index.html").write_text(render(items, posts, ok, pages))
     everything = sorted(posts + items, key=lambda i: i["published"], reverse=True)
     (SITE / "feed.xml").write_text(render_rss(everything))
@@ -1629,6 +1794,7 @@ def main():
     urls += [f"<url><loc>{SITE_URL}/{k}/</loc></url>" for k in SECTIONS if k != "training"]
     urls.append(f"<url><loc>{SITE_URL}/tools/cdl-practice-test/</loc></url>")
     urls.append(f"<url><loc>{SITE_URL}/app/</loc></url>")
+    urls += [f"<url><loc>{SITE_URL}{u}</loc></url>" for u in extra_urls]
     urls += [f"<url><loc>{SITE_URL}/jobs/{j['slug']}/</loc></url>" for j in load_jobs()[1][:150]]
     (SITE / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + "".join(urls) + "</urlset>")
     print(f"Built site: {len(posts)} articles, {len(items)} headlines in archive, {ok}/{len(feeds)} sources up.")
