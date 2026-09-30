@@ -21,8 +21,12 @@ from pathlib import Path
 SITE_URL = "https://otrnews.com"
 SITE_NAME = "OTR News"
 TAGLINE = "Trucking news for owner-operators, small fleets, and drivers."
-CONTACT_EMAIL = ""      # e.g. "news@otrnews.com" — turns on the Contact page
+CONTACT_EMAIL = "news@otrnews.com"   # turns on the Contact page ("" to hide)
 NEWSLETTER_URL = ""     # e.g. your Beehiiv signup link — turns on signup boxes
+PARENT_BRAND = "MyCDLCoach"            # shown as "OTR News is a MyCDLCoach company"
+TRAINING_URL = "https://mycdlcoach.com"  # where "Get your CDL" buttons send people
+TRAINING_PRICE = "$149"                 # shown on the training box ("" to hide)
+TRAINING_REGISTERED = False             # set True once FMCSA's Training Provider Registry shows you as active
 # ==========================================================
 
 KEEP_DAYS = 30          # how long outside headlines stay in the archive
@@ -38,9 +42,10 @@ UA = "Mozilla/5.0 (compatible; OTRNewsBot/1.0; +https://otrnews.com)"
 
 # First match wins, so order matters.
 CATEGORIES = [
+    ("Training", r"\b(eldt|entry.level driver training|permit test|cdl test|cdl skills test|pre.trip|study guide|cdl school|cdl training)\b"),
     ("Regulations", r"\b(fmcsa|eld|elds|hours.of.service|hos|rulemaking|rule|rules|mandate|regulat\w*|exemption|waiver|clearinghouse|english.proficiency|non.domiciled|motus|usdot|congress|senate|bill|law|lawmakers)\b"),
     ("Fuel", r"\b(diesel|fuel|gas prices?|opec|crude|refiner\w*|oil prices?)\b"),
-    ("Enforcement & safety", r"\b(crash\w*|rollover|fatal\w*|collision|safety|seiz\w*|cocaine|heroin|meth\w*|drugs?|smuggl\w*|troopers?|police|blitz|out.of.service|oos|inspections?|cargo theft|theft|stolen|arrest\w*|verdicts?|lawsuit|sues?|fraud\w*)\b"),
+    ("Enforcement & safety", r"\b(crash|crashes|crashed|rollovers?|fatal\w*|collision|safety|seiz\w*|cocaine|heroin|meth\w*|drugs?|smuggl\w*|troopers?|police|blitz|out.of.service|oos|inspections?|cargo theft|theft|stolen|arrest\w*|nuclear verdicts?|fraud\w*|chameleon)\b"),
     ("Freight market", r"\b(freight|spot rates?|contract rates?|load posts?|load boards?|tenders?|capacity|shippers?|brokers?|brokerage|tariffs?|imports?|exports?|ports?|intermodal|dat|sonar)\b"),
     ("Equipment", r"\b(trailers?|engines?|electric trucks?|ev|evs|autonomous|driverless|hydrogen|used trucks?|truck sales|peterbilt|kenworth|freightliner|volvo|mack|navistar|daimler|tires?|nox|emissions)\b"),
     ("Drivers", r"\b(drivers?|truckers?|owner.operators?|cdl|cdls|truck parking|parking|driver pay|pay|wages?|recruit\w*|veterans?)\b"),
@@ -336,6 +341,130 @@ def load_pages():
     return pages
 
 
+
+# ---------- navigation, topics, tools ----------
+
+NAV = [("/", "Latest"), ("/topics/regulations/", "Regulations"), ("/topics/fuel/", "Fuel"),
+       ("/tools/cost-per-mile/", "Cost per mile"), ("/training/", "Get your CDL"), ("/about/", "About")]
+
+
+def nav_html(current=""):
+    return '<nav class="sitenav" aria-label="Site">' + "".join(
+        f'<a href="{u}"' + (' aria-current="page"' if u == current else "") + f">{t}</a>" for u, t in NAV) + "</nav>"
+
+
+def topic_slug(cat):
+    return slugify(cat.replace("&", "and"))
+
+
+def all_topics():
+    return [c for c, _ in CATEGORIES] + ["Industry"]
+
+
+COST_TOOL = r"""
+<h1>Cost per mile calculator</h1>
+<p class="deck">Know your break-even before you take the load. Enter your numbers; everything updates as you type and stays saved on this device.</p>
+<div class="calc">
+<fieldset><legend>Miles</legend>
+<label>Miles per month <input inputmode="decimal" data-k="miles" value="10000"></label>
+<label>Deadhead (% of miles empty) <input inputmode="decimal" data-k="dead" value="12"></label>
+</fieldset>
+<fieldset><legend>Fuel</legend>
+<label>Diesel price ($/gal) <input inputmode="decimal" data-k="fuel" value="5.50"></label>
+<label>Fuel economy (mpg) <input inputmode="decimal" data-k="mpg" value="6.5"></label>
+</fieldset>
+<fieldset><legend>Monthly fixed costs</legend>
+<label>Truck payment <input inputmode="decimal" data-k="truck" value="2200"></label>
+<label>Trailer payment <input inputmode="decimal" data-k="trailer" value="600"></label>
+<label>Insurance <input inputmode="decimal" data-k="ins" value="1400"></label>
+<label>Permits, IFTA, UCR, 2290 (monthly share) <input inputmode="decimal" data-k="permits" value="150"></label>
+<label>ELD, phone, load boards, software <input inputmode="decimal" data-k="tech" value="200"></label>
+<label>Other fixed (parking, accounting, etc.) <input inputmode="decimal" data-k="otherfixed" value="250"></label>
+</fieldset>
+<fieldset><legend>Per-mile costs</legend>
+<label>Maintenance & repairs ($/mile) <input inputmode="decimal" data-k="maint" value="0.20"></label>
+<label>Tires ($/mile) <input inputmode="decimal" data-k="tires" value="0.04"></label>
+<label>Tolls & scales ($/mile) <input inputmode="decimal" data-k="tolls" value="0.02"></label>
+<label>Driver pay ($/mile, include yours) <input inputmode="decimal" data-k="pay" value="0.65"></label>
+</fieldset>
+<fieldset><legend>Rate deductions</legend>
+<label>Factoring or dispatch fee (%) <input inputmode="decimal" data-k="fee" value="3"></label>
+<label>Profit you want to keep (%) <input inputmode="decimal" data-k="profit" value="15"></label>
+</fieldset>
+</div>
+<div class="bar" aria-hidden="true"><span>Break-even <b id="be2">—</b></span><span>Target <b id="target2">—</b></span><a href="#results">Details</a></div>
+<section class="results" id="results" aria-live="polite">
+<div class="big"><span>Break-even rate</span><strong id="be">—</strong><small>per loaded mile</small></div>
+<div class="big goal"><span>Target rate</span><strong id="target">—</strong><small>per loaded mile, with your profit</small></div>
+<dl>
+<dt>Cost per total mile</dt><dd id="cpm">—</dd>
+<dt>Fuel per mile</dt><dd id="fpm">—</dd>
+<dt>Fixed costs per month</dt><dd id="fixed">—</dd>
+<dt>Total cost per month</dt><dd id="total">—</dd>
+<dt>Loaded miles per month</dt><dd id="loaded">—</dd>
+</dl>
+<p class="note">Check: at the target rate, a 500-mile load should pay at least <strong id="load500">—</strong>.</p>
+</section>
+<p class="fine">This calculator is a planning tool. Your real costs vary by lane, season, and equipment. Numbers stay on your device and are never sent to OTR News.</p>
+<script>
+(function(){
+  var ins=[].slice.call(document.querySelectorAll('.calc input'));
+  var KEY='otr-cpm-v1';
+  try{var saved=JSON.parse(localStorage.getItem(KEY)||'{}');ins.forEach(function(i){if(saved[i.dataset.k]!=null)i.value=saved[i.dataset.k];});}catch(e){}
+  function v(k){var i=document.querySelector('[data-k="'+k+'"]');var n=parseFloat(String(i.value).replace(/[$,%\s]/g,''));return isFinite(n)?n:0;}
+  function $(n,d){return '$'+n.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});}
+  function calc(){
+    var miles=v('miles'), mpg=v('mpg');
+    var fixed=v('truck')+v('trailer')+v('ins')+v('permits')+v('tech')+v('otherfixed');
+    var fpm=mpg>0?v('fuel')/mpg:0;
+    var varpm=fpm+v('maint')+v('tires')+v('tolls')+v('pay');
+    var total=fixed+varpm*miles;
+    var loaded=miles*(1-Math.min(v('dead'),95)/100);
+    var keep=1-Math.min(v('fee'),90)/100;
+    var be=loaded>0&&keep>0?total/loaded/keep:0;
+    var target=be/(1-Math.min(v('profit'),90)/100);
+    document.getElementById('be').textContent=be?$(be,2):'—';
+    document.getElementById('target').textContent=target?$(target,2):'—';
+    document.getElementById('be2').textContent=be?$(be,2):'—';
+    document.getElementById('target2').textContent=target?$(target,2):'—';
+    document.getElementById('cpm').textContent=miles?$(total/miles,2):'—';
+    document.getElementById('fpm').textContent=$(fpm,2);
+    document.getElementById('fixed').textContent=$(fixed,0);
+    document.getElementById('total').textContent=$(total,0);
+    document.getElementById('loaded').textContent=Math.round(loaded).toLocaleString();
+    document.getElementById('load500').textContent=target?$(target*500,0):'—';
+    try{var o={};ins.forEach(function(i){o[i.dataset.k]=i.value;});localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}
+  }
+  ins.forEach(function(i){i.addEventListener('input',calc);});
+  calc();
+})();
+</script>
+"""
+
+TOOL_CSS = """<style>
+.calc{display:grid;gap:1rem;margin:1rem 0 1.5rem}
+.calc fieldset{border:1px solid var(--line);border-radius:12px;padding:.75rem 1rem 1rem;margin:0;background:var(--card)}
+.calc legend{font-weight:800;padding:0 .35rem}
+.calc label{display:flex;justify-content:space-between;align-items:center;gap:1rem;font-size:.98rem;padding:.35rem 0}
+.calc input{width:7.5rem;font:600 1.05rem var(--font);text-align:right;padding:.45rem .6rem .35rem;border:1.5px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
+.calc input:focus{outline:3px solid var(--amber);outline-offset:1px}
+.results{padding:1rem 0;border-top:4px solid var(--sign);margin-top:.5rem}
+.bar{position:sticky;bottom:0;z-index:2;display:flex;gap:1rem;align-items:center;justify-content:space-between;background:var(--sign);color:#fff;border-radius:12px;padding:.7rem 1rem calc(.6rem + env(safe-area-inset-bottom,0px));margin:0 0 1rem;font-size:.95rem}
+.bar b{font-size:1.2rem;font-weight:900}
+.bar a{color:#fff;font-weight:700}
+.big{display:flex;flex-wrap:wrap;align-items:baseline;gap:.2rem .6rem;margin:.2rem 0}
+.big span{font-weight:700;width:100%}
+.big strong{font-size:2.4rem;font-weight:900;color:var(--sign);line-height:1}
+.goal strong{color:var(--ink)}
+.big small{color:var(--muted)}
+.results dl{display:grid;grid-template-columns:1fr auto;gap:.3rem 1rem;margin:1rem 0 0}
+.results dt{color:var(--muted)}.results dd{margin:0;font-weight:700;text-align:right}
+.note{margin:.9rem 0 0}.fine{font-size:.85rem;color:var(--muted)}
+@media (prefers-color-scheme:dark){.big strong{color:#5CC795}.goal strong{color:var(--ink)}}
+@media (min-width:44rem){.calc{grid-template-columns:1fr 1fr}}
+</style>"""
+
+
 # ---------- shared page shell ----------
 
 def css_from(tpl):
@@ -349,6 +478,52 @@ def footer_links(pages):
     links += [("/privacy/", "Privacy"), ("/feed.xml", "RSS")]
     return "&ensp;".join(f'<a href="{u}">{t}</a>' for u, t in links)
 
+
+def training_box(link=True):
+    if not TRAINING_URL:
+        return ""
+    reg = " from a registered FMCSA training provider" if TRAINING_REGISTERED else ""
+    price = f" {esc(TRAINING_PRICE)}." if TRAINING_PRICE else ""
+    return f"""<aside class="cta">
+<p class="kicker">From {esc(PARENT_BRAND)}</p>
+<h2>Getting your CDL?</h2>
+<p>Complete your required ELDT theory training online{reg}, at your own pace, right from your phone.{price}</p>
+<a class="btn" href="{esc(TRAINING_URL)}" target="_blank" rel="noopener">Start your course</a>
+{'<a class="more-link" href="/training/">What is ELDT?</a>' if link else ''}
+</aside>"""
+
+
+def parent_line():
+    return f'<p>{SITE_NAME} is a <a href="{esc(TRAINING_URL)}" target="_blank" rel="noopener">{esc(PARENT_BRAND)}</a> company.</p>' if PARENT_BRAND else ""
+
+
+TRAINING_MD = """
+Getting a commercial driver's license starts with **Entry-Level Driver Training (ELDT)**. Since February 7, 2022, federal rules require it before you can take the CDL skills test for the first time.
+
+## Who needs ELDT?
+
+- Anyone getting a **Class A or Class B CDL** for the first time
+- Drivers **upgrading** from a Class B to a Class A
+- Drivers getting a **school bus (S), passenger (P), or hazardous materials (H)** endorsement for the first time
+
+## What does it involve?
+
+ELDT has two parts:
+
+- **Theory (classroom) training**, which covers the knowledge you need, like vehicle inspections, basic control, hours of service, and handling emergencies. It can be completed online, and you need a score of at least 80% on the final assessment.
+- **Behind-the-wheel training**, done in a real truck on a range and on public roads with a qualified instructor.
+
+Both must come from a provider listed on FMCSA's **Training Provider Registry**. When you finish, the provider reports your completion to the Registry, and your state can then let you take the skills test.
+
+## Tips before you start
+
+- **Check the Registry.** Look up any school or online course at tpr.fmcsa.dot.gov before you pay.
+- **Get your CLP first**, if your state requires it before training.
+- **Ask about employer programs.** Some carriers and city or county employers cover training costs for new drivers.
+
+## Start your theory training
+
+""" 
 
 def newsletter_box():
     if not NEWSLETTER_URL:
@@ -382,7 +557,7 @@ PAGE_CSS = """<style>
 </style>"""
 
 
-def shell(tpl, pages, *, title, description, path, body, og_type="website", ld=None):
+def shell(tpl, pages, *, title, description, path, body, og_type="website", ld=None, extra_css=""):
     ld_html = f'<script type="application/ld+json">{json.dumps(ld)}</script>' if ld else ""
     return f"""<!doctype html>
 <html lang="en"><head>
@@ -406,12 +581,13 @@ def shell(tpl, pages, *, title, description, path, body, og_type="website", ld=N
 {ld_html}
 {css_from(tpl)}
 {PAGE_CSS}
+{extra_css}
 </head><body>
-<header class="mast small wrap"><div class="sign"><div class="sign-inner"><p class="logo"><a href="/">{SITE_NAME}</a></p></div></div></header>
+<header class="mast small wrap"><div class="sign"><div class="sign-inner"><p class="logo"><a href="/">{SITE_NAME}</a></p></div></div>{nav_html(path)}</header>
 <main class="wrap doc">
 {body}
 </main>
-<footer class="wrap"><p>{footer_links(pages)}</p><p>&copy; {datetime.now(timezone.utc).year} {SITE_NAME}</p></footer>
+<footer class="wrap"><p>{footer_links(pages)}</p>{parent_line()}<p>&copy; {datetime.now(timezone.utc).year} {SITE_NAME}</p></footer>
 </body></html>"""
 
 
@@ -430,7 +606,7 @@ def render_article(p, posts, tpl, pages):
     if others:
         more = '<section class="more"><h2>More from OTR News</h2>' + "".join(story_html(o) for o in others) + "</section>"
     body = f"""<article>
-<p class="meta"><span class="cat">{esc(p['category'])}</span></p>
+<p class="meta"><a class="cat" href="/topics/{topic_slug(p['category'])}/">{esc(p['category'])}</a></p>
 <h1>{esc(p['title'])}</h1>
 <p class="deck">{esc(p['summary'])}</p>
 <p class="byline"><span>By {esc(p['author'])}</span><time datetime="{p['published']}">{d.strftime('%B %-d, %Y')}</time><span>{p['minutes']} min read</span></p>
@@ -439,6 +615,7 @@ def render_article(p, posts, tpl, pages):
 </div>
 {share}
 </article>
+{training_box()}
 {newsletter_box()}
 {more}
 <a class="back" href="/">All trucking news</a>"""
@@ -470,7 +647,7 @@ def story_html(i, lead=False):
     tag = "h2" if lead else "h3"
     target = "" if i.get("original") else ' target="_blank" rel="noopener"'
     return f"""<article class="{cls}" data-cat="{esc(i["category"])}">
-  <p class="meta"><span class="cat">{esc(i["category"])}</span><span class="src">{esc(i["source"])}</span><time datetime="{esc(i["published"])}">{fmt_date(i["published"])}</time></p>
+  <p class="meta"><a class="cat" href="/topics/{topic_slug(i["category"])}/">{esc(i["category"])}</a><span class="src">{esc(i["source"])}</span><time datetime="{esc(i["published"])}">{fmt_date(i["published"])}</time></p>
   <{tag}><a href="{esc(i["link"])}"{target}>{esc(i["title"])}</a></{tag}>
   {summary}
 </article>"""
@@ -501,10 +678,12 @@ def render(items, originals, sources_ok, pages):
                .replace("{{SOURCE_COUNT}}", str(sources_ok))
                .replace("{{CHIPS}}", chips)
                .replace("{{ORIGINALS}}", ours)
-               .replace("{{NEWSLETTER}}", newsletter_box())
+               .replace("{{NEWSLETTER}}", training_box() + newsletter_box())
+               .replace("{{PARENT}}", parent_line())
                .replace("{{INDUSTRY_TITLE}}", industry_intro)
                .replace("{{STORIES}}", feed_html)
                .replace("{{FOOTER_LINKS}}", footer_links(pages))
+               .replace("{{NAV}}", nav_html("/"))
                .replace("{{JSONLD}}", json.dumps(ld))
                .replace("{{YEAR}}", str(updated.year)))
 
@@ -552,6 +731,36 @@ def main():
         out = SITE / name
         out.mkdir(parents=True, exist_ok=True)
         (out / "index.html").write_text(render_page(name, page, tpl, pages))
+    # topic pages: our articles first, then outside headlines
+    for cat in all_topics():
+        ours = [p for p in posts if p["category"] == cat]
+        theirs = [i for i in items if i["category"] == cat][:60]
+        body = f'<h1>{esc(cat)}</h1>\n<p class="deck">The latest {esc(cat.lower())} news for owner-operators, small fleets, and drivers.</p>'
+        if ours:
+            body += "".join(story_html(p, n == 0) for n, p in enumerate(ours))
+        if theirs:
+            body += '<h2 class="section-title">Around the industry</h2>' + "".join(story_html(i) for i in theirs)
+        if not ours and not theirs:
+            body += '<p class="empty">No stories in this topic yet.</p>'
+        out = SITE / "topics" / topic_slug(cat)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "index.html").write_text(shell(tpl, pages, title=f"{cat} news", description=f"Latest trucking {cat.lower()} news.",
+                                              path=f"/topics/{topic_slug(cat)}/", body=body))
+    out = SITE / "training"
+    out.mkdir(parents=True, exist_ok=True)
+    tbody = ('<h1>Entry-Level Driver Training (ELDT), explained</h1>'
+             '<p class="deck">What new CDL drivers need to know before the skills test.</p>'
+             f'<div class="body">{markdown(TRAINING_MD)}</div>{training_box(link=False)}')
+    tposts = [p for p in posts if p["category"] == "Training"]
+    if tposts:
+        tbody += '<h2 class="section-title">CDL study guides</h2>' + "".join(story_html(p) for p in tposts)
+    (out / "index.html").write_text(shell(tpl, pages, title="ELDT explained: Entry-Level Driver Training for new CDL drivers",
+        description="Who needs ELDT, what it covers, and how to get started on your CDL.", path="/training/", body=tbody))
+    out = SITE / "tools" / "cost-per-mile"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "index.html").write_text(shell(tpl, pages, title="Trucking cost per mile calculator",
+        description="Free cost per mile and break-even rate calculator for owner-operators and small fleets.",
+        path="/tools/cost-per-mile/", body=COST_TOOL, extra_css=TOOL_CSS))
     (SITE / "404.html").write_text(shell(tpl, pages, title="Page not found", description="Page not found", path="/404.html",
         body='<h1>That page isn\'t here</h1><div class="body"><p>It may have moved. The latest trucking news is on the homepage.</p></div><a class="back" href="/">All trucking news</a>'))
     for name, data in IMAGES.items():
@@ -564,6 +773,9 @@ def main():
     urls = [f"<url><loc>{SITE_URL}/</loc><changefreq>hourly</changefreq></url>"]
     urls += [f'<url><loc>{SITE_URL}{p["link"]}</loc><lastmod>{p["published"][:10]}</lastmod></url>' for p in posts]
     urls += [f"<url><loc>{SITE_URL}/{n}/</loc></url>" for n in pages]
+    urls += [f"<url><loc>{SITE_URL}/topics/{topic_slug(c)}/</loc><changefreq>hourly</changefreq></url>" for c in all_topics()]
+    urls.append(f"<url><loc>{SITE_URL}/tools/cost-per-mile/</loc></url>")
+    urls.append(f"<url><loc>{SITE_URL}/training/</loc></url>")
     (SITE / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + "".join(urls) + "</urlset>")
     print(f"Built site: {len(posts)} articles, {len(items)} headlines in archive, {ok}/{len(feeds)} sources up.")
 
