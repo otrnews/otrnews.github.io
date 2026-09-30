@@ -238,7 +238,7 @@ def add_photo_lines(article, photo):
     return article[:end].rstrip("\n") + "\n" + lines + article[end:]
 
 
-def backfill_photos(limit=3):
+def backfill_photos(limit=8):
     """Give older articles and guides without a photo a matching trucking photo, a few per run."""
     done = 0
     for f in sorted(POSTS.glob("*.md"), reverse=True):
