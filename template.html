@@ -94,7 +94,7 @@ main{padding-top:1rem;padding-bottom:3rem}
 footer a{color:inherit}
 
 /* Site navigation */
-.sitenav{display:flex;gap:.25rem 1.1rem;overflow-x:auto;scrollbar-width:none;padding:.9rem .1rem .1rem;font-weight:800;font-size:.95rem}
+.sitenav{display:flex;flex-wrap:wrap;gap:.35rem 1rem;padding:.9rem .1rem .1rem;font-weight:800;font-size:.95rem}
 .sitenav::-webkit-scrollbar{display:none}
 .sitenav a{flex:none;text-decoration:none;color:var(--ink);padding:.2rem 0;border-bottom:3px solid transparent}
 .sitenav a[aria-current="page"],.sitenav a:hover{border-bottom-color:var(--amber)}
@@ -127,6 +127,21 @@ a.cat:hover{text-decoration:underline}
 .partner .logo img,.tool-card .logo img{width:84px;height:auto;border-radius:10px;flex:none}
 .tool-card .banner,.tool-card .logo{display:inline-block;margin-bottom:.6rem;line-height:0}
 .tool-card .banner img{max-height:120px;width:auto}
+
+/* MyCDLCoach box in MyCDLCoach blue */
+.cta.mcc{border-color:#316BAA}
+.cta.mcc .btn{background:#316BAA;color:#fff}
+.cta.mcc h2{color:#1d4f86}
+@media (prefers-color-scheme:dark){.cta.mcc h2{color:#8fb8e8}}
+.mcc-shield{vertical-align:-6px;margin-right:.45rem}
+.parent img{vertical-align:-4px;margin-right:.4rem}
+/* Search + accessibility */
+.search{display:block;margin:.9rem 0 0}
+.search input{width:100%;font:600 1rem var(--font);padding:.7rem .9rem .6rem;border:1.5px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink)}
+.search input:focus{outline:3px solid var(--amber);outline-offset:1px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.skip{position:absolute;left:-999px;top:0;background:var(--sign);color:#fff;padding:.5rem .8rem;z-index:10}
+.skip:focus{left:.5rem;top:.5rem}
 footer{border-top:1px solid var(--line);padding-top:1.5rem;padding-bottom:2.5rem;color:var(--muted);font-size:.875rem}
 footer p{margin:.3rem 0}
 @media (prefers-reduced-motion:no-preference){.chip{transition:background .15s,color .15s,border-color .15s}}
@@ -134,6 +149,7 @@ footer p{margin:.3rem 0}
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 <header class="mast wrap">
   <div class="sign">
     <span class="tab" id="updated" data-time="{{UPDATED_ISO}}">Updated {{UPDATED_TEXT}}</span>
@@ -145,17 +161,19 @@ footer p{margin:.3rem 0}
   {{NAV}}
 </header>
 
-<main class="wrap" id="stories">
+<main class="wrap" id="main">
 <section class="ours" aria-label="OTR News reports">
 {{ORIGINALS}}
 </section>
 {{NEWSLETTER}}
 <section class="industry">
 {{INDUSTRY_TITLE}}
+  <label class="search"><span class="sr">Search headlines</span><input type="search" id="q" placeholder="Search headlines" autocomplete="off"></label>
   <nav class="filters" aria-label="Filter headlines by topic">
     <button type="button" class="chip" data-filter="all" aria-pressed="true">All news</button>{{CHIPS}}
   </nav>
 {{STORIES}}
+<p class="empty" id="none" hidden>No headlines match. Try another word or topic.</p>
 </section>
 </main>
 
@@ -191,16 +209,27 @@ footer p{margin:.3rem 0}
 
   var chips = document.querySelectorAll(".chip");
   var stories = document.querySelectorAll(".industry .story");
+  var q = document.getElementById("q"), cat = "all";
+  function apply(){
+    var term = (q && q.value || "").trim().toLowerCase(), shown = 0;
+    stories.forEach(function(s){
+      var ok = (cat === "all" || s.dataset.cat === cat) && (!term || s.textContent.toLowerCase().indexOf(term) > -1);
+      s.hidden = !ok; if (ok) shown++;
+    });
+    var none = document.getElementById("none");
+    if (none) none.hidden = shown > 0;
+  }
   chips.forEach(function(c){
     c.addEventListener("click", function(){
-      var f = c.dataset.filter;
+      cat = c.dataset.filter;
       chips.forEach(function(x){ x.setAttribute("aria-pressed", x === c ? "true" : "false"); });
-      stories.forEach(function(s){ s.hidden = !(f === "all" || s.dataset.cat === f); });
+      apply();
     });
   });
+  if (q) q.addEventListener("input", apply);
 
   // Pick up new headlines if the page is left open
-  setTimeout(function(){ if (document.visibilityState === "visible") location.reload(); }, 20*60000);
+  setTimeout(function(){ if (document.visibilityState === "visible" && !(q && q.value)) location.reload(); }, 20*60000);
 })();
 </script>
 </body>
