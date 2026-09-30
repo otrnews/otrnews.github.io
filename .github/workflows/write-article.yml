@@ -2,8 +2,8 @@ name: Write daily article
 
 on:
   schedule:
-    - cron: "30 10 * * *"
-  workflow_dispatch:
+    - cron: "30 10 * * *"   # every day, about 6:30 a.m. Eastern
+  workflow_dispatch:         # "Run workflow" button for an extra article
 
 permissions:
   contents: write
@@ -19,10 +19,11 @@ jobs:
       - name: Research and write a draft
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: python write_article.py
       - name: Save the draft
         run: |
           git config user.name "otrnews-bot"
           git config user.email "otrnews-bot@users.noreply.github.com"
-          git add posts
+          git add posts images 2>/dev/null || git add posts
           git diff --staged --quiet || (git commit -m "New article draft for review" && git pull --rebase && git push)
