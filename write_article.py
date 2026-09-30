@@ -12,12 +12,14 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).parent
 POSTS = ROOT / "posts"
+IMAGES = ROOT / "images"
 ARCHIVE = ROOT / "data" / "items.json"
 GUIDE = ROOT / "style-guide.md"   # optional: your own voice and rules
 MODEL = os.environ.get("OTR_MODEL", "claude-sonnet-5-5")
@@ -60,6 +62,7 @@ summary: <one or two sentences, under 200 characters>
 category: <{categories}>
 author: OTR News Staff
 draft: true
+photo_idea: <3 to 6 words for a stock photo search, a generic scene such as "semi truck at fuel pump" or "truck parking lot at night"; no identifiable people, logos, or specific real events>
 ---
 
 <article body in markdown>
@@ -76,42 +79,108 @@ inspections and out-of-service trends, driver pay and jobs, parking, diesel pric
 fuel relief, weather and road closures affecting freight, broker and freight-rate changes,
 fraud and cargo theft, registration and authority. Skip stories only executives or investors care about."""
 
-GUIDE_TOPICS = [
-    "How to pass the CDL permit (knowledge) test on the first try",
-    "The CDL pre-trip inspection, step by step",
-    "Air brakes: what the CDL test expects you to know",
-    "Class A vs. Class B CDL: which one do you need?",
-    "CDL endorsements explained (H, N, P, S, T, X) and when they are worth getting",
-    "Hours of service basics every new driver must know",
-    "The DOT physical and medical card: what to expect",
-    "The FMCSA Drug and Alcohol Clearinghouse explained for new drivers",
-    "Combination vehicles: tips for the CDL knowledge and skills tests",
-    "How to choose a CDL school or training program without getting burned",
-    "Your first year as a truck driver: what to expect and how to survive it",
-    "Backing and parking: skills test maneuvers and how to practice them",
-    "Company driver, lease-purchase, or owner-operator: comparing the paths",
-    "Getting a hazmat endorsement: the steps, background check, and test",
-]
+GUIDE_TOPICS = {
+    "training": [
+        "How to pass the CDL permit (knowledge) test on the first try",
+        "The CDL pre-trip inspection, step by step",
+        "Air brakes: what the CDL test expects you to know",
+        "Class A vs. Class B CDL: which one do you need?",
+        "CDL endorsements explained (H, N, P, S, T, X) and when they are worth getting",
+        "Combination vehicles: tips for the CDL knowledge and skills tests",
+        "How to choose a CDL school or training program without getting burned",
+        "Backing and parking: skills test maneuvers and how to practice them",
+        "Getting a hazmat endorsement: the steps, background check, and test",
+    ],
+    "finance": [
+        "Truck factoring explained: how it works, what it costs, and when it makes sense",
+        "Financing your first semi truck: what lenders look at and how to prepare",
+        "How to calculate your cost per mile and set a profitable rate",
+        "Owner-operator taxes 101: per diem, deductions, and quarterly estimates",
+        "Lease-purchase programs: the questions to ask before you sign",
+    ],
+    "health": [
+        "The DOT physical: what to expect and how to prepare",
+        "Your medical examiner's certificate: how long it lasts and how to keep it current",
+        "Sleep apnea and truck drivers: what the rules actually say",
+        "Staying healthy on the road: realistic food and exercise habits for drivers",
+        "High blood pressure and your DOT medical card: what drivers should know",
+    ],
+    "repairs": [
+        "Preventive maintenance schedule for owner-operators",
+        "What to do when your truck breaks down on the highway",
+        "Tire care for truckers: tread, pressure, and inspection basics",
+        "Reading your truck's warning lights and fault codes: when to stop and when to keep going",
+        "DPF and emissions system problems: causes, prevention, and costs",
+    ],
+    "insurance": [
+        "Commercial truck insurance explained: the coverages owner-operators need",
+        "Why truck insurance costs so much, and how to lower your premium",
+        "Getting your own authority: insurance requirements and filings",
+    ],
+    "jobs": [
+        "How to read a trucking job ad: pay, home time, and red flags",
+        "Driver pay explained: cents per mile, percentage, and hourly",
+        "Your first year as a truck driver: what to expect and how to survive it",
+        "Company driver, lease-purchase, or owner-operator: comparing the paths",
+    ],
+}
+SECTION_CATEGORY = {"training": "Training", "finance": "Business", "insurance": "Business",
+                    "health": "Drivers", "repairs": "Equipment", "jobs": "Drivers"}
 
 GUIDE_ASSIGNMENT = """Your job today: write an evergreen CDL STUDY GUIDE for new and future truck drivers on
 this topic: "{topic}"
 
 Research it with web search, using primary sources first (FMCSA, the federal regulations in
-49 CFR, and state CDL manuals). Be accurate: note where rules differ by state and tell readers
-to check their own state's CDL manual. Be practical: checklists, common mistakes, and
+49 CFR, IRS, state CDL manuals, and other official sources). Be accurate: note where rules differ by state and tell readers
+to check their own state's rules where relevant. Be practical: checklists, common mistakes, and
 test-day tips. Do not promise that anyone will pass, and do not mention any specific
 training company by name."""
 
 
 def pick_assignment(now):
-    """Mondays and Thursdays are study-guide days; other days are news."""
+    """Mondays and Thursdays are guide days, rotating through the guide sections; other days are news."""
     if now.weekday() in (0, 3):
         done = [f.read_text(encoding="utf-8").lower() for f in POSTS.glob("*.md")]
-        for topic in GUIDE_TOPICS:
-            key = topic.lower()[:40]
-            if not any(key in d for d in done):
-                return GUIDE_ASSIGNMENT.format(topic=topic), "Training", topic
-    return NEWS_ASSIGNMENT, "Regulations, Freight market, Fuel, Enforcement & safety, Equipment, Drivers, Business", None
+        guides_so_far = sum(1 for d in done if "guide_topic:" in d)
+        order = list(GUIDE_TOPICS)
+        for step in range(len(order)):
+            section = order[(guides_so_far + step) % len(order)]
+            for topic in GUIDE_TOPICS[section]:
+                if not any(topic.lower()[:40] in d for d in done):
+                    extra = ("\nThis is general health information, not medical advice. Tell readers to talk to a "
+                             "certified medical examiner or their doctor about their own situation." if section == "health" else "")
+                    extra += ("\nExplain options neutrally. Never promise approval, rates, or savings." if section in ("finance", "insurance") else "")
+                    return GUIDE_ASSIGNMENT.format(topic=topic) + extra, SECTION_CATEGORY[section], topic, section
+    return NEWS_ASSIGNMENT, "Regulations, Freight market, Fuel, Enforcement & safety, Equipment, Drivers, Business", None, None
+
+def fetch_photo(query, slug):
+    """Find a free Pexels photo for the draft. Needs the PEXELS_API_KEY secret; skipped if missing."""
+    key = os.environ.get("PEXELS_API_KEY", "").strip()
+    if not key or not query:
+        return None
+    url = "https://api.pexels.com/v1/search?" + urllib.parse.urlencode(
+        {"query": query, "per_page": 8, "orientation": "landscape"})
+    try:
+        req = urllib.request.Request(url, headers={"Authorization": key, "User-Agent": "OTRNewsBot/1.0"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            photos = json.loads(r.read()).get("photos", [])
+        if not photos:
+            return None
+        ph = photos[0]
+        src = ph["src"].get("large") or ph["src"]["original"]
+        req = urllib.request.Request(src, headers={"User-Agent": "OTRNewsBot/1.0"})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            data = r.read()
+        IMAGES.mkdir(exist_ok=True)
+        name = f"{slug}.jpg"
+        (IMAGES / name).write_bytes(data)
+        return {"image": f"/images/{name}",
+                "image_alt": (ph.get("alt") or query).replace("\n", " ")[:150],
+                "credit": f"Photo by {ph.get('photographer', 'Pexels')} on Pexels",
+                "credit_url": ph.get("url", "https://www.pexels.com")}
+    except Exception as e:
+        print(f"Photo search skipped: {e}")
+        return None
 
 
 def recent_posts(n=10):
@@ -157,9 +226,9 @@ def main():
     guide = ""
     if GUIDE.exists():
         guide = "\nHouse style from the publisher (follow it):\n" + GUIDE.read_text(encoding="utf-8") + "\n"
-    assignment, categories, guide_topic = pick_assignment(now)
-    if categories == "Training":
-        categories = "Training"
+    assignment, categories, guide_topic, section = pick_assignment(now)
+    if guide_topic:
+        categories = categories  # fixed category for guides
     else:
         categories = "one of: " + categories
     prompt = PROMPT.format(today=now.strftime("%A, %B %-d, %Y"), iso=now.strftime("%Y-%m-%dT%H:%M:%S+00:00"),
@@ -186,7 +255,7 @@ def main():
     if "draft:" not in head:
         head = head.rstrip() + "\ndraft: true\n"
     if guide_topic:
-        head = head.rstrip() + f"\nguide_topic: {guide_topic}\n"
+        head = head.rstrip() + f"\nguide_topic: {guide_topic}\nsection: {section}\n"
     article = head + article[head_end:]
 
     # House-style cleanup: no colons in the headline/summary, no notes to the editor
@@ -202,6 +271,12 @@ def main():
 
     title = re.search(r"^title:\s*(.+)$", article, re.M).group(1).strip().strip('"')
     slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:60].rstrip("-")
+    idea = re.search(r"^photo_idea:\s*(.+)$", article, re.M)
+    photo = fetch_photo(idea.group(1).strip().strip('"') if idea else "", f"{now:%Y-%m-%d}-{slug}")
+    if photo:
+        end = article.find("---", 3)
+        lines = "".join(f'{k}: {v.replace(chr(10), " ")}\n' for k, v in photo.items())
+        article = article[:end].rstrip("\n") + "\n" + lines + article[end:]
     POSTS.mkdir(exist_ok=True)
     path = POSTS / f"{now:%Y-%m-%d}-{slug}.md"
     path.write_text(article, encoding="utf-8")
