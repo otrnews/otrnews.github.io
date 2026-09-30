@@ -62,7 +62,7 @@ summary: <one or two sentences, under 200 characters>
 category: <{categories}>
 author: OTR News Staff
 draft: true
-photo_idea: <3 to 6 words for a stock photo search, a generic scene such as "semi truck at fuel pump" or "truck parking lot at night"; no identifiable people, logos, or specific real events>
+photo_idea: <3 to 6 words for a stock photo search that includes a truck, a generic trucking scene such as "semi truck at fuel pump" or "truck parking lot at night"; no identifiable people, logos, or specific real events>
 ---
 
 <article body in markdown>
@@ -153,18 +153,52 @@ def pick_assignment(now):
                     return GUIDE_ASSIGNMENT.format(topic=topic) + extra, SECTION_CATEGORY[section], topic, section
     return NEWS_ASSIGNMENT, "Regulations, Freight market, Fuel, Enforcement & safety, Equipment, Drivers, Business", None, None
 
-def fetch_photo(query, slug):
-    """Find a free Pexels photo for the draft. Needs the PEXELS_API_KEY secret; skipped if missing."""
-    key = os.environ.get("PEXELS_API_KEY", "").strip()
-    if not key or not query:
-        return None
+TRUCK_WORDS = re.compile(r"\b(truck\w*|semi|trailer\w*|tractor|freight|highway|trucker\w*|rig|big rig|18.wheeler|diesel)\b", re.I)
+# Backup searches by topic, so every article gets a real trucking photo
+TOPIC_PHOTO = {
+    "Regulations": "semi truck weigh station", "Fuel": "semi truck diesel fuel pump",
+    "Enforcement & safety": "semi truck highway safety", "Freight market": "semi trucks loading dock freight",
+    "Equipment": "semi truck engine repair shop", "Drivers": "truck driver in cab",
+    "Business": "semi truck fleet parked", "Training": "truck driving school tractor trailer",
+    "Industry": "semi truck on highway",
+}
+SECTION_PHOTO = {"finance": "semi truck fleet parked", "insurance": "semi truck on highway", "health": "trucks parked at truck stop night",
+                 "repairs": "semi truck engine repair shop", "jobs": "truck driver in cab", "training": "truck driving school tractor trailer"}
+
+
+def used_photo_urls():
+    used = set()
+    for f in POSTS.glob("*.md"):
+        m = re.search(r"^credit_url:\s*(\S+)", f.read_text(encoding="utf-8"), re.M)
+        if m:
+            used.add(m.group(1))
+    return used
+
+
+def pexels_search(query, key):
     url = "https://api.pexels.com/v1/search?" + urllib.parse.urlencode(
-        {"query": query, "per_page": 8, "orientation": "landscape"})
+        {"query": query, "per_page": 20, "orientation": "landscape"})
+    req = urllib.request.Request(url, headers={"Authorization": key, "User-Agent": "OTRNewsBot/1.0"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.loads(r.read()).get("photos", [])
+
+
+def fetch_photo(query, slug, backup=""):
+    """Find a free trucking photo on Pexels that matches the story. Needs the PEXELS_API_KEY secret; skipped if missing."""
+    key = os.environ.get("PEXELS_API_KEY", "").strip()
+    if not key:
+        print("No PEXELS_API_KEY secret set; the article will use the topic card image.")
+        return None
+    query = (query or "").strip()
+    if query and not TRUCK_WORDS.search(query):
+        query += " semi truck"   # keep results trucking-related, not generic office stock
+    used = used_photo_urls()
     try:
-        req = urllib.request.Request(url, headers={"Authorization": key, "User-Agent": "OTRNewsBot/1.0"})
-        with urllib.request.urlopen(req, timeout=30) as r:
-            photos = json.loads(r.read()).get("photos", [])
-        if not photos:
+        for q in [x for x in (query, backup, "semi truck on highway") if x]:
+            photos = [p for p in pexels_search(q, key) if p.get("url") not in used]
+            if photos:
+                break
+        else:
             return None
         ph = photos[0]
         src = ph["src"].get("large") or ph["src"]["original"]
@@ -181,6 +215,32 @@ def fetch_photo(query, slug):
     except Exception as e:
         print(f"Photo search skipped: {e}")
         return None
+
+
+def add_photo_lines(article, photo):
+    end = article.find("---", 3)
+    lines = "".join(f'{k}: {v.replace(chr(10), " ")}\n' for k, v in photo.items())
+    return article[:end].rstrip("\n") + "\n" + lines + article[end:]
+
+
+def backfill_photos(limit=3):
+    """Give older articles and guides without a photo a matching trucking photo, a few per run."""
+    done = 0
+    for f in sorted(POSTS.glob("*.md"), reverse=True):
+        if done >= limit:
+            break
+        text = f.read_text(encoding="utf-8")
+        head = text[:text.find("---", 3)] if text.startswith("---") else ""
+        if not head or re.search(r"^image:", head, re.M):
+            continue
+        get = lambda k: (re.search(rf"^{k}:\s*(.+)$", head, re.M) or [None, ""])[1].strip().strip('"')
+        backup = SECTION_PHOTO.get(get("section").lower()) or TOPIC_PHOTO.get(get("category"), "")
+        photo = fetch_photo(get("photo_idea") or backup, f.stem, backup)
+        if not photo:
+            break
+        f.write_text(add_photo_lines(text, photo), encoding="utf-8")
+        print(f"Photo added: {f.name}")
+        done += 1
 
 
 def recent_posts(n=10):
@@ -272,15 +332,16 @@ def main():
     title = re.search(r"^title:\s*(.+)$", article, re.M).group(1).strip().strip('"')
     slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:60].rstrip("-")
     idea = re.search(r"^photo_idea:\s*(.+)$", article, re.M)
-    photo = fetch_photo(idea.group(1).strip().strip('"') if idea else "", f"{now:%Y-%m-%d}-{slug}")
+    cat = re.search(r"^category:\s*(.+)$", article, re.M)
+    backup = SECTION_PHOTO.get(section or "") or TOPIC_PHOTO.get(cat.group(1).strip() if cat else "", "")
+    photo = fetch_photo(idea.group(1).strip().strip('"') if idea else "", f"{now:%Y-%m-%d}-{slug}", backup)
     if photo:
-        end = article.find("---", 3)
-        lines = "".join(f'{k}: {v.replace(chr(10), " ")}\n' for k, v in photo.items())
-        article = article[:end].rstrip("\n") + "\n" + lines + article[end:]
+        article = add_photo_lines(article, photo)
     POSTS.mkdir(exist_ok=True)
     path = POSTS / f"{now:%Y-%m-%d}-{slug}.md"
     path.write_text(article, encoding="utf-8")
     print(f"Draft saved: {path.relative_to(ROOT)}")
+    backfill_photos()
 
 
 if __name__ == "__main__":
