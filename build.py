@@ -1513,7 +1513,29 @@ COURSE_NOTE = ('<p class="fine">Free study material based on the state CDL manua
 PROGRESS_JS = """<script>(function(){var K='otr-course-progress';var d={};try{d=JSON.parse(localStorage.getItem(K)||'{}')}catch(e){}
 document.querySelectorAll('[data-lesson]').forEach(function(el){if(d[el.dataset.lesson])el.classList.add('done');});
 document.querySelectorAll('[data-course]').forEach(function(el){var ids=el.dataset.lessons.split(' '),n=ids.filter(function(i){return d[i]}).length;
-var b=el.querySelector('.progress i');if(b)b.style.width=(100*n/ids.length)+'%';var t=el.querySelector('.ptext');if(t)t.textContent=n+' of '+ids.length+' lessons complete';});})();</script>"""
+var b=el.querySelector('.progress i');if(b)b.style.width=(100*n/ids.length)+'%';
+if(n===ids.length){var f=document.querySelector('[data-finish="'+ids[0].split('/')[0]+'"]');if(f)f.hidden=false;}var t=el.querySelector('.ptext');if(t)t.textContent=n+' of '+ids.length+' lessons complete';});})();</script>"""
+
+
+def course_finish_box(c, hidden=False):
+    """End-of-course handoff to MyCDLCoach's ELDT course."""
+    if not TRAINING_URL:
+        return ""
+    sep = "&" if "?" in TRAINING_URL else "?"
+    url = f"{TRAINING_URL}{sep}utm_source=otrnews&utm_medium=free-course&utm_campaign={c['slug']}"
+    reg = " from a registered FMCSA training provider" if TRAINING_REGISTERED else ""
+    price = f" for {esc(TRAINING_PRICE)}" if TRAINING_PRICE else ""
+    others = [x for x in COURSES if x["slug"] != c["slug"]]
+    more = " or ".join(f'<a href="/courses/{x["slug"]}/">{esc(x["title"])}</a>' for x in others)
+    return f"""<aside class="cta mcc course-finish" data-finish="{esc(c['slug'])}"{' hidden' if hidden else ''}>
+<p class="kicker"><img class="mcc-shield" src="/partners/mycdlcoach-shield.webp" alt="" width="22" height="24">Your next step, from {esc(PARENT_BRAND)}</p>
+<h2>You finished {esc(c["title"])}. Now get your CDL.</h2>
+<p>Studying for the knowledge test is step one. If you're getting a Class A or B CDL for the first time, or upgrading from B to A, federal rules require Entry-Level Driver Training (ELDT) before you can take the skills test.</p>
+<p>{esc(PARENT_BRAND)} lets you complete the ELDT theory portion online{reg}, at your own pace, right from your phone{price}.</p>
+<a class="btn" href="{esc(url)}" target="_blank" rel="noopener">Start your ELDT course</a>
+<a class="more-link" href="/training/">What is ELDT?</a>
+{f'<p class="fine">Keep studying for free: {more}.</p>' if more else ''}
+</aside>"""
 
 
 def lesson_id(c, l):
@@ -1571,7 +1593,8 @@ def write_courses(tpl, pages):
         cbody = (f'<p class="meta"><a class="cat" href="/courses/">Free CDL courses</a></p><h1>{esc(c["title"])}</h1><p class="deck">{esc(c["blurb"])}</p>'
                  f'<div data-course data-lessons="{esc(ids)}"><div class="progress"><i></i></div><p class="fine ptext"></p></div>'
                  f'<ol class="course-list">{items}</ol>'
-                 f'<a class="btn" href="/courses/{c["slug"]}/{c["lessons"][0]["slug"]}/">Start lesson 1</a>' + COURSE_NOTE + training_box() + PROGRESS_JS)
+                 f'<a class="btn" href="/courses/{c["slug"]}/{c["lessons"][0]["slug"]}/">Start lesson 1</a>'
+                 + course_finish_box(c, hidden=True) + COURSE_NOTE + training_box() + PROGRESS_JS)
         d = out / c["slug"]
         d.mkdir(parents=True, exist_ok=True)
         (d / "index.html").write_text(shell(tpl, pages, title=f'{c["title"]}: free CDL course', description=c["blurb"],
@@ -1584,11 +1607,12 @@ def write_courses(tpl, pages):
             nav += (f'<a class="btn btn-alt" href="/courses/{c["slug"]}/{prev_l["slug"]}/">&larr; {esc(prev_l["title"])}</a>' if prev_l
                     else f'<a class="btn btn-alt" href="/courses/{c["slug"]}/">&larr; Course overview</a>')
             nav += (f'<a class="btn" href="/courses/{c["slug"]}/{next_l["slug"]}/">Next: {esc(next_l["title"])} &rarr;</a>' if next_l
-                    else '<a class="btn" href="/courses/">Finish: see all courses &rarr;</a>')
+                    else f'<a class="btn" href="/courses/{c["slug"]}/">Course overview</a>')
             nav += '</nav>'
             lbody = (f'<article><p class="meta"><a class="cat" href="/courses/{c["slug"]}/">{esc(c["title"])}</a> <span>Lesson {n + 1} of {len(c["lessons"])}</span></p>'
                      f'<h1>{esc(l["title"])}</h1><div class="body">{markdown(l["body"].strip())}</div></article>'
-                     + lesson_quiz_html(c, l) + nav + newsletter_box() + training_box())
+                     + lesson_quiz_html(c, l) + (course_finish_box(c) if not next_l else "") + nav + newsletter_box()
+                     + (training_box() if next_l else ""))
             ld = {"@context": "https://schema.org", "@type": "LearningResource", "name": l["title"], "educationalLevel": "Beginner",
                   "learningResourceType": "Lesson", "isAccessibleForFree": True, "inLanguage": "en-US",
                   "isPartOf": {"@type": "Course", "name": c["title"], "description": c["blurb"],
