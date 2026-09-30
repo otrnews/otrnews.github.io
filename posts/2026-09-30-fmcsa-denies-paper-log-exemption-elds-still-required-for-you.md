@@ -31,11 +31,9 @@ Drivers weighed in heavily. The request drew more than 900 comments on the Feder
 
 This is the latest in a long line of denials. FMCSA turned down OOIDA's request for a five-year small-business exemption in 2018. In 2024 it denied a one-truck owner-operator's request. It said economic difficulties don't justify an exemption.
 
-The timing is bad for cash flow. Diesel averaged $6.51 a gallon on Sept. 21, the highest AAA has recorded. Any relief on fixed costs would have helped. This denial closes off one route for it.
+The timing is bad for cash flow. Diesel prices are near record highs, the highest AAA has recorded. Any relief on fixed costs would have helped. This denial closes off one route for it.
 
 The ELD cost is real, but the alternatives aren't free. Paper logs mean more time on paperwork, and roadside inspectors would still check them. Under the current rules, a driver who used paper logs outside the narrow exceptions would risk a violation.
-
-I did not find the Federal Register publication date for the denial notice. I also didn't find a response from FOPT. Check the FMCSA docket (FMCSA-2025-1282) for the full notice.
 
 ## What to do
 
