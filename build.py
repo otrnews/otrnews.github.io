@@ -27,6 +27,27 @@ PARENT_BRAND = "MyCDLCoach"            # shown as "OTR News is a MyCDLCoach comp
 TRAINING_URL = "https://mycdlcoach.com"  # where "Get your CDL" buttons send people
 TRAINING_PRICE = "$149"                 # shown on the training box ("" to hide)
 TRAINING_REGISTERED = False             # set True once FMCSA's Training Provider Registry shows you as active
+
+# Partner (referral) links. The site picks a matching partner for each page by topic.
+# To add one, copy a block. To pause one, put # in front of each of its lines.
+PARTNERS = [
+    {"name": "DAT Load Board", "url": "https://www.dat.com/power/0002438644",
+     "blurb": "Find loads, check lane rates, and see who's paying before you book.",
+     "cta": "Try DAT", "topics": ["Freight market", "Business", "Industry", "calculator"]},
+    {"name": "DAT Outgo Factoring", "url": "https://outgo.dat.com/referrals?referrer=coach0013",
+     "blurb": "Get paid on your invoices fast instead of waiting 30 days or more on broker payments.",
+     "cta": "See Outgo factoring", "topics": ["Freight market", "Business", "Fuel", "calculator"]},
+    {"name": "Truck Parking Club", "url": "https://truckparkingclubcomllc.sjv.io/c/6864035/2019579/25053?trafsrc=partner_api",
+     "blurb": "Reserve a safe truck parking spot ahead of time instead of hunting for one at the end of your clock.",
+     "cta": "Find parking", "topics": ["Drivers", "Regulations", "Enforcement & safety", "Training"]},
+    {"name": "Roadside Masters", "url": "https://www.roadsidemasters.com/price-quote.php?r=MYCDLCOACH",
+     "blurb": "Roadside help for trucks when you break down. Get a quote before you need it.",
+     "cta": "Get a quote", "topics": ["Equipment", "Enforcement & safety", "Drivers"],
+     "extra": [("Sign up your truck", "https://www.roadsidemasters.com/signup-truck.php?r=MYCDLCOACH")]},
+    {"name": "Zoho", "url": "https://go.zoho.com/B1do",
+     "blurb": "Business software for running your trucking company, from invoicing to keeping your books.",
+     "cta": "Try Zoho", "topics": ["Business"]},
+]
 # ==========================================================
 
 KEEP_DAYS = 30          # how long outside headlines stay in the archive
@@ -288,6 +309,10 @@ Every OTR News article is researched from primary sources, like FMCSA, DOT, the 
 
 We use AI tools to help research and draft articles. An editor reviews every story before it is published. When we get something wrong, we fix it and say so.
 
+## How we make money
+
+OTR News is free to read. We earn money from our parent company's training courses and from partner referral links, which are always labeled "Partner." Partners never pay for news coverage.
+
 ## Around the industry
 
 Our homepage also links to headlines from other trucking news outlets. Those links go to the original publisher. We don't republish their articles.
@@ -309,6 +334,10 @@ We don't ask for your name, email, or any other personal information to read the
 - **Fonts.** The site loads its typeface from Google Fonts, which means your browser connects to Google's servers. See Google's privacy policy for details.
 - **Links to other sites.** Headlines and sources link to other publishers, whose own privacy policies apply once you leave OTR News.
 {"- **Newsletter.** If you sign up for our newsletter, your email address is handled by our newsletter provider and used only to send you the newsletter. You can unsubscribe anytime." if NEWSLETTER_URL else ""}
+
+## Partner links
+
+Some links on OTR News, marked "Partner," are referral links. If you sign up through one, OTR News may earn a commission at no extra cost to you. Those partners have their own privacy policies, and they don't pay for or influence our news coverage.
 
 ## Changes
 
@@ -345,7 +374,7 @@ def load_pages():
 # ---------- navigation, topics, tools ----------
 
 NAV = [("/", "Latest"), ("/topics/regulations/", "Regulations"), ("/topics/fuel/", "Fuel"),
-       ("/tools/cost-per-mile/", "Cost per mile"), ("/training/", "Get your CDL"), ("/about/", "About")]
+       ("/tools/cost-per-mile/", "Cost per mile"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/about/", "About")]
 
 
 def nav_html(current=""):
@@ -477,6 +506,52 @@ def footer_links(pages):
         links.append(("/contact/", "Contact"))
     links += [("/privacy/", "Privacy"), ("/feed.xml", "RSS")]
     return "&ensp;".join(f'<a href="{u}">{t}</a>' for u, t in links)
+
+
+DISCLOSURE = "Partner. OTR News may earn a commission if you sign up, at no cost to you."
+
+
+def partners_for(topic):
+    return [p for p in PARTNERS if p.get("url") and topic in p.get("topics", [])]
+
+
+def pick_partner(topic, seed=""):
+    """Pick one matching partner, rotating fairly between matches."""
+    matches = partners_for(topic) or [p for p in PARTNERS if p.get("url")]
+    if not matches:
+        return None
+    n = sum(ord(c) for c in (seed + topic + datetime.now(timezone.utc).strftime("%Y%m%d%H")))
+    return matches[n % len(matches)]
+
+
+def partner_box(p):
+    if not p:
+        return ""
+    return f"""<aside class="partner">
+<p class="kicker">{DISCLOSURE}</p>
+<h2>{esc(p['name'])}</h2>
+<p>{esc(p['blurb'])}</p>
+<a class="btn btn-alt" href="{esc(p['url'])}" target="_blank" rel="sponsored noopener">{esc(p.get('cta', 'Learn more'))}</a>
+</aside>"""
+
+
+def toolkit_body():
+    cards = []
+    for p in PARTNERS:
+        if not p.get("url"):
+            continue
+        extra = "".join(f' <a class="more-link" href="{esc(u)}" target="_blank" rel="sponsored noopener">{esc(t)}</a>' for t, u in p.get("extra", []))
+        cards.append(f"""<section class="tool-card">
+<h2>{esc(p['name'])}</h2>
+<p>{esc(p['blurb'])}</p>
+<a class="btn btn-alt" href="{esc(p['url'])}" target="_blank" rel="sponsored noopener">{esc(p.get('cta', 'Learn more'))}</a>{extra}
+</section>""")
+    return (f"""<h1>Driver toolkit</h1>
+<p class="deck">Services we recommend for owner-operators and small fleets, plus our own free tools.</p>
+<p class="fine">Some links on this page are partner links. OTR News may earn a commission if you sign up, at no cost to you. Partners never pay for news coverage, and our reporting is written independently.</p>
+<section class="tool-card"><h2>Cost per mile calculator</h2><p>Free. Find your break-even rate before you take the load.</p>
+<a class="btn" href="/tools/cost-per-mile/">Open the calculator</a></section>
+""" + "".join(cards) + training_box())
 
 
 def training_box(link=True):
@@ -616,6 +691,7 @@ def render_article(p, posts, tpl, pages):
 {share}
 </article>
 {training_box()}
+{partner_box(pick_partner(p['category'], p['slug']))}
 {newsletter_box()}
 {more}
 <a class="back" href="/">All trucking news</a>"""
@@ -664,7 +740,9 @@ def render(items, originals, sources_ok, pages):
     if originals:
         ours = story_html(originals[0], True) + "\n".join(story_html(i) for i in originals[1:])
         industry_intro = '<h2 class="section-title" id="industry">Around the industry</h2>'
-        feed_html = "\n".join(story_html(i) for i in feed)
+        parts = [story_html(i) for i in feed]
+        parts.insert(min(8, len(parts)), partner_box(pick_partner("Industry", "home")))
+        feed_html = "\n".join(parts)
     else:
         ours, industry_intro = "", ""
         feed_html = (story_html(feed[0], True) + "\n".join(story_html(i) for i in feed[1:])) if feed else \
@@ -739,7 +817,11 @@ def main():
         if ours:
             body += "".join(story_html(p, n == 0) for n, p in enumerate(ours))
         if theirs:
-            body += '<h2 class="section-title">Around the industry</h2>' + "".join(story_html(i) for i in theirs)
+            hs = [story_html(i) for i in theirs]
+            hs.insert(min(6, len(hs)), partner_box(pick_partner(cat, cat)))
+            body += '<h2 class="section-title">Around the industry</h2>' + "".join(hs)
+        elif ours:
+            body += partner_box(pick_partner(cat, cat))
         if not ours and not theirs:
             body += '<p class="empty">No stories in this topic yet.</p>'
         out = SITE / "topics" / topic_slug(cat)
@@ -760,7 +842,13 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(shell(tpl, pages, title="Trucking cost per mile calculator",
         description="Free cost per mile and break-even rate calculator for owner-operators and small fleets.",
-        path="/tools/cost-per-mile/", body=COST_TOOL, extra_css=TOOL_CSS))
+        path="/tools/cost-per-mile/", body=COST_TOOL + "".join(partner_box(p) for p in partners_for("calculator")[:2]),
+        extra_css=TOOL_CSS))
+    out = SITE / "toolkit"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "index.html").write_text(shell(tpl, pages, title="Driver toolkit",
+        description="Tools and services we recommend for truck drivers, owner-operators, and small fleets.",
+        path="/toolkit/", body=toolkit_body()))
     (SITE / "404.html").write_text(shell(tpl, pages, title="Page not found", description="Page not found", path="/404.html",
         body='<h1>That page isn\'t here</h1><div class="body"><p>It may have moved. The latest trucking news is on the homepage.</p></div><a class="back" href="/">All trucking news</a>'))
     for name, data in IMAGES.items():
@@ -776,6 +864,7 @@ def main():
     urls += [f"<url><loc>{SITE_URL}/topics/{topic_slug(c)}/</loc><changefreq>hourly</changefreq></url>" for c in all_topics()]
     urls.append(f"<url><loc>{SITE_URL}/tools/cost-per-mile/</loc></url>")
     urls.append(f"<url><loc>{SITE_URL}/training/</loc></url>")
+    urls.append(f"<url><loc>{SITE_URL}/toolkit/</loc></url>")
     (SITE / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + "".join(urls) + "</urlset>")
     print(f"Built site: {len(posts)} articles, {len(items)} headlines in archive, {ok}/{len(feeds)} sources up.")
 
