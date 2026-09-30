@@ -384,9 +384,311 @@ def load_pages():
 
 
 
+
+# ---------- CDL practice test game ----------
+# Each question: category, question, answers (FIRST answer is the correct one; the game shuffles them), explanation.
+QUIZ = [
+    # General knowledge
+    ["General knowledge", "What is the blood alcohol concentration (BAC) limit for a driver operating a commercial motor vehicle?",
+     ["0.04%", "0.08%", "0.02%", "0.10%"],
+     "CMV drivers are considered legally impaired at 0.04% BAC, half the typical limit for car drivers."],
+    ["General knowledge", "Under hours-of-service rules, how many hours may a property-carrying driver drive after 10 consecutive hours off duty?",
+     ["11 hours", "10 hours", "12 hours", "14 hours"],
+     "Property-carrying drivers may drive up to 11 hours after 10 consecutive hours off duty."],
+    ["General knowledge", "A property-carrying driver may not drive beyond what hour after coming on duty?",
+     ["The 14th hour", "The 11th hour", "The 12th hour", "The 16th hour"],
+     "Driving is not allowed beyond the 14th consecutive hour after coming on duty, following 10 hours off."],
+    ["General knowledge", "When is a property-carrying driver required to take a 30-minute break?",
+     ["After 8 cumulative hours of driving", "After 4 hours of driving", "After 11 hours on duty", "Only when the ELD tells them to"],
+     "A 30-minute break is required after 8 cumulative hours of driving without at least a 30-minute interruption."],
+    ["General knowledge", "At speeds below 40 mph, how much following distance should you keep?",
+     ["At least 1 second for every 10 feet of vehicle length", "At least 2 seconds, no matter the vehicle", "One truck length for every 10 mph", "At least 3 car lengths"],
+     "Keep at least one second per 10 feet of vehicle length below 40 mph, and add one more second above 40 mph."],
+    ["General knowledge", "If you must stop on the side of the road, how soon must you put out your warning devices?",
+     ["Within 10 minutes", "Within 30 minutes", "Within 5 minutes", "Only after dark"],
+     "Warning devices, such as reflective triangles, must be put out within 10 minutes of stopping."],
+    ["General knowledge", "On a two-lane road with traffic in both directions, where should warning triangles be placed?",
+     ["One within 10 feet of the vehicle, one about 100 feet behind, and one about 100 feet ahead", "All three together about 50 feet behind the vehicle", "One in front and two directly behind the bumper", "About 500 feet ahead and 500 feet behind"],
+     "Place one within 10 feet of the front or rear corner on the traffic side, one about 100 feet behind, and one about 100 feet ahead."],
+    ["General knowledge", "How far ahead should you look while driving?",
+     ["12 to 15 seconds ahead", "3 to 5 seconds ahead", "Only to the vehicle in front of you", "About one block"],
+     "Looking 12 to 15 seconds ahead gives you time to spot hazards and change speed or lanes smoothly."],
+    ["General knowledge", "What is the minimum tread depth for the front (steering axle) tires?",
+     ["4/32 inch in every major groove", "2/32 inch in every major groove", "1/32 inch", "6/32 inch"],
+     "Front tires need at least 4/32 inch tread depth in every major groove; other tires need at least 2/32 inch."],
+    ["General knowledge", "Hydroplaning can happen at speeds as low as:",
+     ["30 mph", "55 mph", "45 mph", "65 mph"],
+     "Hydroplaning is possible at speeds as low as 30 mph when there's enough water on the road."],
+    ["General knowledge", "If you double your speed, your braking distance becomes about:",
+     ["Four times as long", "Twice as long", "Three times as long", "The same"],
+     "Doubling your speed takes about four times as much distance to stop, and your truck has four times the destructive power in a crash."],
+    ["General knowledge", "Total stopping distance is made up of:",
+     ["Perception distance, reaction distance, and braking distance", "Reaction distance and braking distance only", "Braking distance and skid distance", "Following distance and braking distance"],
+     "Total stopping distance adds up the distance you travel while noticing the hazard, reacting to it, and braking."],
+    ["General knowledge", "What causes most serious skids?",
+     ["Driving too fast for road conditions", "Worn brake linings", "Crosswinds", "Using the engine brake"],
+     "Most serious skids come from driving too fast for the conditions, so slowing down is the best prevention."],
+    ["General knowledge", "When facing an obstacle ahead, which is usually faster?",
+     ["Steering around it", "Stopping", "Downshifting", "Sounding the horn"],
+     "You can almost always turn to miss an obstacle more quickly than you can stop."],
+    ["General knowledge", "When should you choose a lower gear for a steep downgrade?",
+     ["Before you start down the grade", "Halfway down, once speed builds", "Only if the brakes start to fade", "At the bottom of the grade"],
+     "Shift down before starting the grade. Trying to downshift once speed builds can leave you stuck in neutral."],
+    ["General knowledge", "What is the rule for crossing railroad tracks with a manual transmission?",
+     ["Never shift gears while crossing the tracks", "Shift up to cross quickly", "Shift to neutral and coast across", "Shift down in the middle of the tracks"],
+     "Pick a gear that gets you all the way across and never shift while on the tracks."],
+    ["General knowledge", "To keep cars from passing you on the right during a right turn, you should:",
+     ["Keep the rear of the vehicle close to the curb", "Swing wide to the left before turning", "Turn from the center lane", "Speed up through the turn"],
+     "Keeping the rear close to the curb stops other drivers from squeezing into the space on your right."],
+    ["General knowledge", "When should you dim your high beams at night?",
+     ["Within 500 feet of an oncoming vehicle or one you're following", "Within 100 feet of an oncoming vehicle", "Only in cities", "Never on highways"],
+     "Use low beams within 500 feet of an oncoming vehicle and when following another vehicle within 500 feet."],
+    ["General knowledge", "After you start a trip, when must you first check your cargo and its securement?",
+     ["Within the first 50 miles", "After the first 150 miles", "At the first fuel stop", "Only at the end of the trip"],
+     "Check cargo within the first 50 miles, then every 3 hours or 150 miles, and after every break."],
+    ["General knowledge", "How many tie-downs should cargo have?",
+     ["At least one tie-down for every 10 feet of cargo", "One tie-down for every 20 feet of cargo", "Two tie-downs total, no matter the length", "One tie-down per pallet"],
+     "You need at least one tie-down for every 10 feet of cargo, and no matter how small the cargo, at least two tie-downs."],
+    ["General knowledge", "Is a CMV driver allowed to use a hand-held phone while driving?",
+     ["No, hand-held phone use is prohibited", "Yes, below 45 mph", "Yes, for calls under 2 minutes", "Only on private property"],
+     "Federal rules prohibit CMV drivers from holding a mobile phone to talk, text, or dial while driving."],
+    ["General knowledge", "How long can a DOT medical examiner's certificate be valid, at most?",
+     ["24 months", "12 months", "36 months", "5 years"],
+     "A medical examiner's certificate is valid for up to 24 months; the examiner may issue it for less time."],
+
+    # Air brakes
+    ["Air brakes", "At about what pressure does the air compressor governor usually stop the compressor from pumping (cut-out)?",
+     ["About 125 psi", "About 60 psi", "About 100 psi", "About 200 psi"],
+     "The governor typically cuts out around 125 psi and cuts back in around 100 psi."],
+    ["Air brakes", "At about what pressure does the governor let the compressor start pumping again (cut-in)?",
+     ["About 100 psi", "About 60 psi", "About 125 psi", "About 20 psi"],
+     "Cut-in is usually around 100 psi."],
+    ["Air brakes", "The low air pressure warning must come on before pressure in the service tanks falls below:",
+     ["60 psi", "100 psi", "20 psi", "90 psi"],
+     "The low pressure warning signal must come on before pressure drops below 60 psi (or half the governor cut-out pressure on older vehicles)."],
+    ["Air brakes", "In most vehicles, the spring brakes come on automatically when air pressure drops to:",
+     ["20 to 45 psi", "60 to 80 psi", "90 to 100 psi", "0 psi"],
+     "Spring brakes come on automatically when pressure drops into the 20 to 45 psi range."],
+    ["Air brakes", "In a static leakage test on a single vehicle (engine off, brakes released), the pressure loss should be less than:",
+     ["2 psi in one minute", "5 psi in one minute", "10 psi in one minute", "1 psi in five minutes"],
+     "A single vehicle should lose less than 2 psi in one minute; a combination vehicle less than 3 psi."],
+    ["Air brakes", "In an applied leakage test on a single vehicle, after the initial drop, the pressure loss should be no more than:",
+     ["3 psi in one minute", "6 psi in one minute", "10 psi in one minute", "1 psi in one minute"],
+     "With the brakes fully applied, a single vehicle should lose no more than 3 psi in one minute; a combination no more than 4 psi."],
+    ["Air brakes", "With a dual air system, how quickly should pressure build from 85 to 100 psi at operating RPM?",
+     ["Within 45 seconds", "Within 2 minutes", "Within 5 minutes", "Within 10 seconds"],
+     "In dual air systems, pressure should build from 85 to 100 psi within about 45 seconds."],
+    ["Air brakes", "How often should manually drained air tanks be drained?",
+     ["At the end of each day of driving", "Once a week", "Once a month", "Only when water is visible"],
+     "Drain manually operated tanks completely at the end of each driving day to remove water and oil."],
+    ["Air brakes", "What does an alcohol evaporator do in an air brake system?",
+     ["Reduces the risk of ice in air brake valves in cold weather", "Cools the air compressor", "Cleans the brake drums", "Increases air pressure"],
+     "Alcohol put into the system helps keep moisture from freezing in the valves and lines."],
+    ["Air brakes", "About how long does it take air brakes to start working after you press the pedal?",
+     ["About one-half second (brake lag)", "Instantly", "About 3 seconds", "About 5 seconds"],
+     "Air brake lag is about half a second, which adds distance to your stops."],
+    ["Air brakes", "When checking a slack adjuster by hand with the brakes released, it needs adjustment if it moves more than about:",
+     ["1 inch where the pushrod attaches", "3 inches", "1/8 inch", "6 inches"],
+     "If the slack adjuster moves more than about an inch where the pushrod attaches, it probably needs adjustment."],
+    ["Air brakes", "If the low air pressure warning comes on while driving, you should:",
+     ["Stop and safely park as soon as possible", "Keep driving to the next exit and check it there", "Pump the brakes to build pressure", "Drain the air tanks"],
+     "Low air pressure means the brakes may soon lock up or fail. Stop and park safely as soon as you can."],
+    ["Air brakes", "On a long downgrade, once you reach your safe speed, the right way to brake is to:",
+     ["Apply the brakes firmly until you're about 5 mph below safe speed, then release", "Hold light, steady pressure all the way down", "Fan the brakes on and off quickly", "Use only the trailer hand valve"],
+     "Brake hard enough to feel a definite slowdown, drop about 5 mph below your safe speed, then release. Repeat as needed."],
+    ["Air brakes", "What does the supply pressure gauge show?",
+     ["How much pressure is in the air tanks", "How much pressure you're applying to the brakes", "Engine oil pressure", "Tire pressure"],
+     "The supply pressure gauge shows air pressure in the tanks. The application gauge shows pressure being applied to the brakes."],
+    ["Air brakes", "Are front-wheel brakes safe to use on slippery roads?",
+     ["Yes, front brakes are good under all conditions", "No, they cause skids and should be disconnected", "Only on dry pavement", "Only below 20 mph"],
+     "Tests show front-wheel skids from braking are unlikely even on ice. Front brakes are good under all conditions."],
+
+    # Combination vehicles
+    ["Combination vehicles", "Which trailer in a set of doubles or triples is most likely to roll over?",
+     ["The last trailer", "The first trailer", "The middle trailer", "They are all equally likely"],
+     "Rearward amplification (the crack-the-whip effect) makes the last trailer the most likely to roll over."],
+    ["Combination vehicles", "On most rigs, what color is the emergency (supply) air line?",
+     ["Red", "Blue", "Black", "Yellow"],
+     "The emergency line is usually red and the service line is usually blue."],
+    ["Combination vehicles", "What do glad hands do?",
+     ["Connect the service and emergency air lines from the tractor to the trailer", "Lock the fifth wheel jaws", "Hold the landing gear in place", "Secure the safety chains"],
+     "Glad hands are the coupling devices that join the tractor's air lines to the trailer's."],
+    ["Combination vehicles", "The tractor protection valve closes automatically when air pressure drops to about:",
+     ["20 to 45 psi", "90 to 100 psi", "60 psi", "120 psi"],
+     "It closes in the 20 to 45 psi range to keep air in the tractor if the trailer breaks away or leaks badly."],
+    ["Combination vehicles", "Should you use the trailer hand valve (trolley valve) to park?",
+     ["No, never use it for parking", "Yes, it's the correct parking brake", "Yes, on level ground", "Only for short stops"],
+     "Air can leak away and release the brakes. Always use the parking brakes to park."],
+    ["Combination vehicles", "What most often causes a tractor jackknife?",
+     ["The tractor's drive wheels locking up or skidding", "The trailer being too light", "Driving too slowly", "Turning the steering wheel to the left"],
+     "When the drive wheels lose traction, the tractor can spin around and jackknife."],
+    ["Combination vehicles", "If the trailer starts to skid, what should you do?",
+     ["Release the brakes to let the tires regain traction", "Apply the trailer hand brake", "Brake harder", "Speed up"],
+     "Releasing the brakes lets the trailer wheels grip the road again."],
+    ["Combination vehicles", "Before backing under a trailer, how high should the trailer be?",
+     ["Slightly lower than the center of the fifth wheel", "Much higher than the fifth wheel", "Exactly level with the top of the frame", "Resting on the ground"],
+     "The trailer should be just low enough that it's raised slightly when the tractor backs under it."],
+    ["Combination vehicles", "After coupling, how much space should there be between the upper and lower fifth wheel?",
+     ["None", "About 1 inch", "About 3 inches", "Enough to fit a hand"],
+     "Any space between the upper and lower fifth wheel is a problem, since the kingpin may be on top of the closed jaws."],
+    ["Combination vehicles", "How do you test the coupling after connecting to a trailer?",
+     ["Pull forward gently in low gear with the trailer brakes locked (tug test)", "Back up hard against the trailer", "Rock the trailer by hand", "Drive around the block"],
+     "A gentle tug in low gear against the locked trailer brakes confirms the fifth wheel is locked."],
+    ["Combination vehicles", "When pulling doubles, where should the heavier trailer go?",
+     ["First, right behind the tractor", "Last", "It doesn't matter", "Whichever trailer is newer"],
+     "The heaviest trailer should be first, right behind the tractor, and the lighter one in the rear."],
+    ["Combination vehicles", "What is the best way to prevent rollovers?",
+     ["Keep the cargo as low as possible and go slowly around turns", "Load the heaviest cargo on top", "Keep a full fuel tank", "Take curves in a higher gear"],
+     "Keeping the center of gravity low and slowing down for turns and ramps are the keys to preventing rollovers."],
+]
+
+QUIZ_HTML = r"""
+<h1>Free CDL practice test</h1>
+<p class="deck">Test yourself on general knowledge, air brakes, and combination vehicles. Pick a test, answer 15 questions, and see if you'd pass. The real CDL knowledge tests generally require 80%.</p>
+<div id="quiz" class="quiz">
+  <div id="q-start">
+    <div class="q-picks">
+      <button type="button" class="q-pick" data-cat="General knowledge">General knowledge</button>
+      <button type="button" class="q-pick" data-cat="Air brakes">Air brakes</button>
+      <button type="button" class="q-pick" data-cat="Combination vehicles">Combination vehicles</button>
+      <button type="button" class="q-pick" data-cat="all">Mixed: all topics</button>
+    </div>
+    <p id="q-best" class="fine"></p>
+  </div>
+  <div id="q-play" hidden>
+    <div class="q-top"><span id="q-count"></span><span id="q-score"></span></div>
+    <div class="q-bar"><span id="q-fill"></span></div>
+    <h2 id="q-text"></h2>
+    <div id="q-answers" class="q-answers"></div>
+    <div id="q-feedback" class="q-feedback" hidden></div>
+    <button type="button" id="q-next" class="btn" hidden>Next question</button>
+  </div>
+  <div id="q-end" hidden>
+    <p class="q-result-label" id="q-verdict"></p>
+    <p class="q-big" id="q-final"></p>
+    <p id="q-detail"></p>
+    <div class="q-actions">
+      <button type="button" id="q-again" class="btn">Try again</button>
+      <button type="button" id="q-share" class="btn btn-alt">Share my score</button>
+    </div>
+    <p id="q-shared" class="fine" hidden>Copied! Paste it anywhere to challenge a friend.</p>
+  </div>
+</div>
+<p class="fine">For practice only. Rules and test content vary by state, so study your state's official CDL manual. Questions are based on the federal CDL model manual and FMCSA rules.</p>
+<script>
+(function(){
+  var BANK = %QUIZ_JSON%;
+  var N = 15, KEY = 'otr-quiz-best-v1';
+  var $ = function(id){ return document.getElementById(id); };
+  var set = [], i = 0, score = 0, cat = '', locked = false;
+  function shuffle(a){ a = a.slice(); for (var j = a.length - 1; j > 0; j--) { var k = Math.floor(Math.random() * (j + 1)); var t = a[j]; a[j] = a[k]; a[k] = t; } return a; }
+  function best(){ try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } }
+  function showBest(){
+    var b = best(), parts = [];
+    Object.keys(b).forEach(function(k){ parts.push(k + ': ' + b[k] + '%'); });
+    $('q-best').textContent = parts.length ? 'Your best scores: ' + parts.join(', ') : '';
+  }
+  function start(c){
+    cat = c; i = 0; score = 0;
+    var pool = BANK.filter(function(q){ return c === 'all' || q[0] === c; });
+    set = shuffle(pool).slice(0, N);
+    $('q-start').hidden = true; $('q-end').hidden = true; $('q-play').hidden = false;
+    show();
+  }
+  function show(){
+    locked = false;
+    var q = set[i];
+    $('q-count').textContent = 'Question ' + (i + 1) + ' of ' + set.length;
+    $('q-score').textContent = score + ' correct';
+    $('q-fill').style.width = (i / set.length * 100) + '%';
+    $('q-text').textContent = q[1];
+    var box = $('q-answers'); box.innerHTML = '';
+    shuffle(q[2].map(function(t, n){ return {t: t, ok: n === 0}; })).forEach(function(a){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'q-answer'; b.textContent = a.t; b.dataset.ok = a.ok ? '1' : '';
+      b.addEventListener('click', function(){ pick(b); });
+      box.appendChild(b);
+    });
+    $('q-feedback').hidden = true; $('q-next').hidden = true;
+    $('q-text').focus && window.scrollTo({top: $('quiz').offsetTop - 10, behavior: 'smooth'});
+  }
+  function pick(btn){
+    if (locked) return; locked = true;
+    var ok = btn.dataset.ok === '1';
+    if (ok) score++;
+    [].forEach.call(document.querySelectorAll('.q-answer'), function(b){
+      b.disabled = true;
+      if (b.dataset.ok === '1') b.classList.add('right');
+      else if (b === btn) b.classList.add('wrong');
+    });
+    var fb = $('q-feedback');
+    fb.className = 'q-feedback ' + (ok ? 'good' : 'bad');
+    fb.innerHTML = '<strong>' + (ok ? 'Correct.' : 'Not quite.') + '</strong> ';
+    fb.appendChild(document.createTextNode(set[i][3]));
+    fb.hidden = false;
+    $('q-score').textContent = score + ' correct';
+    $('q-next').textContent = i + 1 < set.length ? 'Next question' : 'See my score';
+    $('q-next').hidden = false; $('q-next').focus();
+  }
+  function end(){
+    var pct = Math.round(score / set.length * 100);
+    var label = cat === 'all' ? 'Mixed' : cat;
+    var b = best(); if (!b[label] || pct > b[label]) { b[label] = pct; try { localStorage.setItem(KEY, JSON.stringify(b)); } catch (e) {} }
+    $('q-play').hidden = true; $('q-end').hidden = false;
+    window.scrollTo({top: $('quiz').offsetTop - 10, behavior: 'smooth'});
+    $('q-final').textContent = pct + '%';
+    $('q-verdict').textContent = pct >= 80 ? 'You would pass' : 'Keep studying';
+    $('q-verdict').className = 'q-result-label ' + (pct >= 80 ? 'good' : 'bad');
+    $('q-detail').textContent = score + ' of ' + set.length + ' correct on ' + label + '. ' +
+      (pct >= 80 ? 'Nice work. Try another topic to be fully ready.' : 'You need 80% to pass most CDL knowledge tests. Review the explanations and try again.');
+    $('q-share').dataset.text = 'I scored ' + pct + '% on the OTR News CDL practice test (' + label + '). Can you beat me? https://otrnews.com/tools/cdl-practice-test/';
+    showBest();
+  }
+  [].forEach.call(document.querySelectorAll('.q-pick'), function(b){ b.addEventListener('click', function(){ start(b.dataset.cat); }); });
+  $('q-next').addEventListener('click', function(){ i++; if (i < set.length) show(); else end(); });
+  $('q-again').addEventListener('click', function(){ $('q-end').hidden = true; $('q-start').hidden = false; showBest(); });
+  $('q-share').addEventListener('click', function(){
+    var t = this.dataset.text;
+    if (navigator.share) { navigator.share({text: t}).catch(function(){}); }
+    else if (navigator.clipboard) { navigator.clipboard.writeText(t).then(function(){ $('q-shared').hidden = false; }); }
+  });
+  showBest();
+})();
+</script>
+"""
+
+QUIZ_CSS = """<style>
+.quiz{margin:1.25rem 0 1.5rem}
+.q-picks{display:grid;gap:.6rem}
+.q-pick{font:800 1.1rem var(--font);text-align:left;padding:1rem 1.1rem .9rem;border-radius:12px;border:2px solid var(--sign);background:var(--card);color:var(--ink);cursor:pointer}
+.q-pick:hover,.q-pick:focus-visible{background:var(--sign);color:#fff;outline:none}
+.q-top{display:flex;justify-content:space-between;font-weight:700;color:var(--muted);font-size:.9rem}
+.q-bar{height:8px;background:var(--line);border-radius:999px;margin:.5rem 0 1rem;overflow:hidden}
+.q-bar span{display:block;height:100%;background:var(--amber);width:0;transition:width .3s}
+#q-text{font-weight:800;font-size:1.3rem;line-height:1.3;margin:0 0 1rem}
+.q-answers{display:grid;gap:.55rem}
+.q-answer{font:600 1.02rem/1.35 var(--font);text-align:left;padding:.85rem 1rem .75rem;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.q-answer:hover:not(:disabled){border-color:var(--sign)}
+.q-answer.right{border-color:#1a8a4f;background:#e3f4ea;color:#0f3d24}
+.q-answer.wrong{border-color:#c0392b;background:#fbe7e4;color:#5c1810}
+.q-answer:disabled{cursor:default}
+.q-feedback{margin:1rem 0;padding:.9rem 1rem;border-radius:10px;border-left:5px solid}
+.q-feedback.good{border-color:#1a8a4f;background:var(--card)}
+.q-feedback.bad{border-color:#c0392b;background:var(--card)}
+#q-next{margin-top:.25rem}
+.q-big{font-size:4rem;font-weight:900;line-height:1;margin:.2rem 0 .5rem;color:var(--sign)}
+.q-result-label{font-weight:900;font-size:1.3rem;margin:0}
+.q-result-label.good{color:#1a8a4f}.q-result-label.bad{color:#c0392b}
+.q-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+.quiz button.btn{border:0;cursor:pointer;font:800 1rem var(--font)}
+.q-picks + .fine{margin-top:.8rem}
+@media (prefers-color-scheme:dark){.q-big{color:#5CC795}.q-answer.right{background:#123524;color:#bfe8cf}.q-answer.wrong{background:#3d1612;color:#f3c4bd}}
+</style>"""
+
+
 # ---------- navigation, topics, tools ----------
 
-NAV = [("/", "Latest"), ("/topics/regulations/", "Regulations"), ("/topics/fuel/", "Fuel"),
+NAV = [("/", "Latest"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/topics/fuel/", "Fuel"),
        ("/tools/cost-per-mile/", "Cost per mile"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/about/", "About")]
 
 
@@ -580,6 +882,8 @@ def toolkit_body():
     return (f"""<h1>Driver toolkit</h1>
 <p class="deck">Services we recommend for owner-operators and small fleets, plus our own free tools.</p>
 <p class="fine">Some links on this page are partner links. OTR News may earn a commission if you sign up, at no cost to you. Partners never pay for news coverage, and our reporting is written independently.</p>
+<section class="tool-card"><h2>CDL practice test</h2><p>Free. Test yourself on general knowledge, air brakes, and combination vehicles.</p>
+<a class="btn" href="/tools/cdl-practice-test/">Take the test</a></section>
 <section class="tool-card"><h2>Cost per mile calculator</h2><p>Free. Find your break-even rate before you take the load.</p>
 <a class="btn" href="/tools/cost-per-mile/">Open the calculator</a></section>
 """ + "".join(cards) + training_box())
@@ -626,6 +930,7 @@ Both must come from a provider listed on FMCSA's **Training Provider Registry**.
 - **Check the Registry.** Look up any school or online course at tpr.fmcsa.dot.gov before you pay.
 - **Get your CLP first**, if your state requires it before training.
 - **Ask about employer programs.** Some carriers and city or county employers cover training costs for new drivers.
+- **Test yourself.** Take our [free CDL practice test](/tools/cdl-practice-test/) to see where you stand.
 
 ## Start your theory training
 
@@ -875,6 +1180,12 @@ def main():
         description="Free cost per mile and break-even rate calculator for owner-operators and small fleets.",
         path="/tools/cost-per-mile/", body=COST_TOOL + "".join(partner_box(p) for p in partners_for("calculator")[:2]),
         extra_css=TOOL_CSS))
+    out = SITE / "tools" / "cdl-practice-test"
+    out.mkdir(parents=True, exist_ok=True)
+    qjson = json.dumps(QUIZ).replace("</", "<\\/")
+    (out / "index.html").write_text(shell(tpl, pages, title="Free CDL practice test: general knowledge, air brakes, combination vehicles",
+        description=f"Free CDL practice test with {len(QUIZ)} questions and explanations. See if you'd pass the CDL knowledge test.",
+        path="/tools/cdl-practice-test/", body=QUIZ_HTML.replace("%QUIZ_JSON%", qjson) + training_box(), extra_css=QUIZ_CSS))
     out = SITE / "toolkit"
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(shell(tpl, pages, title="Driver toolkit",
@@ -899,6 +1210,7 @@ def main():
     urls.append(f"<url><loc>{SITE_URL}/tools/cost-per-mile/</loc></url>")
     urls.append(f"<url><loc>{SITE_URL}/training/</loc></url>")
     urls.append(f"<url><loc>{SITE_URL}/toolkit/</loc></url>")
+    urls.append(f"<url><loc>{SITE_URL}/tools/cdl-practice-test/</loc></url>")
     (SITE / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + "".join(urls) + "</urlset>")
     print(f"Built site: {len(posts)} articles, {len(items)} headlines in archive, {ok}/{len(feeds)} sources up.")
 
