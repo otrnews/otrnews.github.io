@@ -4,7 +4,7 @@ date: 2026-09-30T10:41:05+00:00
 summary: Diesel fell about 15 cents from its record in the latest EIA reading. Tight supplies and high refining costs mean truckers shouldn't expect prices to keep dropping.
 category: Fuel
 author: OTR News Staff
-draft: true
+draft: false
 ---
 
 Diesel dropped this week for the first time in a month, but the drop is small and the price is still extremely high. The national average was $6.382 a gallon in the Sept. 29 EIA weekly survey. The week before, it hit a record $6.529, according to EIA weekly regional figures published by SMC3. That is about 15 cents of relief on a fill-up that now costs well over $1,000 for many trucks.
