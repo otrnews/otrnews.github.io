@@ -986,7 +986,7 @@ def section_page(key, posts, items=()):
 # ---------- navigation, topics, tools ----------
 
 NAV = [("/", "OTR News"), ("/industry/", "Around the industry"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/guides/", "Guides"), ("/jobs/", "Jobs"),
-       ("/tools/cost-per-mile/", "Cost per mile"), ("/courses/", "Courses"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/traffic/", "Road conditions"), ("/about/", "About")]
+       ("/tools/cost-per-mile/", "Cost per mile"), ("/tools/load-calculator/", "Load calculator"), ("/courses/", "Courses"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/traffic/", "Road conditions"), ("/about/", "About")]
 
 
 def has_videos():
@@ -1073,6 +1073,7 @@ COST_TOOL = r"""
 </dl>
 <p class="note">Check: at the target rate, a 500-mile load should pay at least <strong id="load500">—</strong>.</p>
 </section>
+<p><a class="btn" href="/tools/load-calculator/">Have a load? Map it and check the rate</a></p>
 <p class="fine">This calculator is a planning tool. Your real costs vary by lane, season, and equipment. Numbers stay on your device and are never sent to OTR News.</p>
 <script>
 (function(){
@@ -1131,6 +1132,125 @@ TOOL_CSS = """<style>
 @media (prefers-color-scheme:dark){.big strong{color:#5CC795}.goal strong{color:var(--ink)}}
 @media (min-width:44rem){.calc{grid-template-columns:1fr 1fr}}
 </style>"""
+
+
+ORS_API_KEY = ""   # optional: free key from openrouteservice.org turns on truck (HGV) routing; blank uses standard road routing
+
+LOAD_TOOL = r"""
+<h1>Load profit calculator</h1>
+<p class="deck">Map the trip, get the miles, and see if the rate pays. Uses the costs you saved in the <a href="/tools/cost-per-mile/">cost per mile calculator</a>.</p>
+<div class="calc route">
+<fieldset><legend>Trip</legend>
+<label>Truck is now in <input id="ld-from" placeholder="City, ST (optional)" autocomplete="off"></label>
+<label>Pickup <input id="ld-pick" placeholder="Dallas, TX" autocomplete="off"></label>
+<label>Delivery <input id="ld-drop" placeholder="Atlanta, GA" autocomplete="off"></label>
+</fieldset>
+<fieldset><legend>Load</legend>
+<label>Rate offered (total $) <input id="ld-rate" inputmode="decimal" placeholder="2400"></label>
+<label>Diesel price ($/gal) <input id="ld-fuel" inputmode="decimal"></label>
+<p class="fine" id="ld-costnote"></p>
+<button type="button" class="btn" id="ld-go">Map it and check the rate</button>
+</fieldset>
+</div>
+<p class="fine" id="ld-status" role="status"></p>
+<div class="mapbox"><div id="ld-map" role="img" aria-label="Map of the trip route"></div></div>
+<section class="results" id="ld-results" aria-live="polite" hidden>
+<div class="big"><span id="ld-verdict">Profit on this load</span><strong id="ld-profit">—</strong><small id="ld-profit-sub"></small></div>
+<dl>
+<dt>Loaded miles</dt><dd id="ld-loaded">—</dd>
+<dt>Deadhead miles</dt><dd id="ld-dead">—</dd>
+<dt>Rate per loaded mile</dt><dd id="ld-rpm">—</dd>
+<dt>Rate per total mile</dt><dd id="ld-rtm">—</dd>
+<dt>Your break-even per loaded mile</dt><dd id="ld-be">—</dd>
+<dt>Fuel for the trip</dt><dd id="ld-fuelcost">—</dd>
+<dt>Total trip cost</dt><dd id="ld-cost">—</dd>
+<dt>Drive time (about 55 mph)</dt><dd id="ld-time">—</dd>
+</dl>
+<p class="note" id="ld-counter"></p>
+</section>
+<p class="fine">Miles and route are estimates for planning, not navigation. They may differ from PC*MILER or broker miles and may not avoid low bridges, weight limits, or hazmat restrictions. Drive with a truck GPS. Your numbers stay on this device.</p>
+<script>(function(){
+var KEY='otr-cpm-v1',D={miles:10000,dead:12,fuel:5.5,mpg:6.5,truck:2200,trailer:600,ins:1400,permits:150,tech:200,otherfixed:250,maint:.2,tires:.04,tolls:.02,pay:.65,fee:3,profit:15},S={},saved=false;
+try{var o=JSON.parse(localStorage.getItem(KEY)||'{}');for(var k in o){var n=parseFloat(String(o[k]).replace(/[$,%\s]/g,''));if(isFinite(n)){S[k]=n;saved=true;}}}catch(e){}
+function c(k){return S[k]!=null?S[k]:D[k];}
+var $=function(id){return document.getElementById(id);},fuelIn=$('ld-fuel');fuelIn.value=c('fuel');
+$('ld-costnote').innerHTML=saved?'Using your saved costs.':'Using sample costs. <a href="/tools/cost-per-mile/">Enter your own</a> for a true answer.';
+try{var last=JSON.parse(localStorage.getItem('otr-load-v1')||'{}');['from','pick','drop','rate'].forEach(function(k){if(last[k])$('ld-'+k).value=last[k];});}catch(e){}
+function money(n,d){return (n<0?'-$':'$')+Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});}
+var map=null,layer=null;
+function ensureMap(){if(map||!window.L)return;map=L.map('ld-map',{scrollWheelZoom:false}).setView([39.5,-98.35],4);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);}
+ensureMap();
+function geocode(q){return fetch('https://photon.komoot.io/api/?limit=5&lat=39.5&lon=-98.35&q='+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(d){
+var f=(d.features||[]).filter(function(x){var cc=(x.properties.countrycode||'').toUpperCase();return cc==='US'||cc==='CA'||cc==='MX';})[0];
+if(!f)throw new Error('Could not find "'+q+'". Try "City, ST".');var p=f.properties;
+return {lat:f.geometry.coordinates[1],lon:f.geometry.coordinates[0],name:[p.name,p.state].filter(Boolean).join(', ')};});}
+var ORS='__ORS__';
+function leg(a,b){
+if(ORS){var hgv=function(u){return fetch(u,{method:'POST',headers:{'Content-Type':'application/json','Authorization':ORS},
+body:JSON.stringify({coordinates:[[a.lon,a.lat],[b.lon,b.lat]]})}).then(function(r){if(!r.ok)throw new Error('busy');return r.json();}).then(function(d){
+var f=d.features[0];return {miles:f.properties.summary.distance/1609.344,line:f.geometry.coordinates,truck:true};});};
+return hgv('https://api.heigit.org/openrouteservice/v2/directions/driving-hgv/geojson')
+.catch(function(){return hgv('https://api.openrouteservice.org/v2/directions/driving-hgv/geojson');})
+.catch(function(){return car(a,b);});}
+return car(a,b);}
+function car(a,b){return fetch('https://router.project-osrm.org/route/v1/driving/'+a.lon+','+a.lat+';'+b.lon+','+b.lat+'?overview=full&geometries=geojson').then(function(r){return r.json();}).then(function(d){
+if(!d.routes||!d.routes.length)throw new Error('No road route found between those places.');return {miles:d.routes[0].distance/1609.344,line:d.routes[0].geometry.coordinates};});}
+function go(){var from=$('ld-from').value.trim(),pick=$('ld-pick').value.trim(),drop=$('ld-drop').value.trim(),rate=parseFloat(($('ld-rate').value||'').replace(/[$,\s]/g,''));
+if(!pick||!drop){$('ld-status').textContent='Enter a pickup and a delivery.';return;}
+try{localStorage.setItem('otr-load-v1',JSON.stringify({from:from,pick:pick,drop:drop,rate:$('ld-rate').value}));}catch(e){}
+$('ld-status').textContent='Finding the route…';$('ld-go').disabled=true;
+Promise.all([from?geocode(from):null,geocode(pick),geocode(drop)]).then(function(pl){
+return Promise.all([pl[0]?leg(pl[0],pl[1]):null,leg(pl[1],pl[2])]).then(function(lg){return {pl:pl,lg:lg};});}).then(function(r){
+var dead=r.lg[0]?r.lg[0].miles:0,loaded=r.lg[1].miles,total=dead+loaded;
+ensureMap();if(map){if(layer)map.removeLayer(layer);layer=L.layerGroup().addTo(map);
+if(r.lg[0])L.polyline(r.lg[0].line.map(function(p){return [p[1],p[0]];}),{color:'#8a8a8a',weight:5,dashArray:'8 8'}).addTo(layer);
+var ln=L.polyline(r.lg[1].line.map(function(p){return [p[1],p[0]];}),{color:'#00603C',weight:6}).addTo(layer);
+r.pl.forEach(function(p,i){if(p)L.marker([p.lat,p.lon],{title:p.name}).bindPopup(['Truck','Pickup','Delivery'][i]+': '+p.name).addTo(layer);});
+map.fitBounds(L.featureGroup(layer.getLayers()).getBounds(),{padding:[24,24]});}
+var fuel=parseFloat(fuelIn.value)||c('fuel'),mpg=c('mpg')||6.5,fpm=fuel/mpg;
+var varpm=fpm+c('maint')+c('tires')+c('tolls')+c('pay'),fixedpm=c('miles')>0?(c('truck')+c('trailer')+c('ins')+c('permits')+c('tech')+c('otherfixed'))/c('miles'):0;
+var cost=total*(varpm+fixedpm),keep=1-Math.min(c('fee'),90)/100;
+var mLoaded=c('miles')*(1-Math.min(c('dead'),95)/100),be=mLoaded>0?(fixedpm*c('miles')+varpm*c('miles'))/mLoaded/keep:0;
+$('ld-loaded').textContent=Math.round(loaded).toLocaleString();$('ld-dead').textContent=Math.round(dead).toLocaleString();
+$('ld-be').textContent=money(be,2);$('ld-fuelcost').textContent=money(total*fpm,0);$('ld-cost').textContent=money(cost,0);
+var hrs=total/55,days=Math.max(1,Math.ceil(hrs/11));$('ld-time').textContent=hrs.toFixed(1)+' hrs, about '+days+(days>1?' days':' day')+' under 11-hour driving limits';
+if(rate>0){var net=rate*keep,profit=net-cost;
+$('ld-rpm').textContent=money(rate/loaded,2);$('ld-rtm').textContent=money(rate/total,2);
+$('ld-profit').textContent=money(profit,0);$('ld-profit').style.color=profit>=0?'':'#B42318';
+$('ld-verdict').textContent=profit>=0?'This load covers your costs':'This load loses money';
+$('ld-profit-sub').textContent=profit>=0?'profit after fees and costs':'after fees and costs';
+var ask=cost/keep/(1-Math.min(c('profit'),90)/100);$('ld-counter').innerHTML='To keep your '+c('profit')+'% profit, counter at <strong>'+money(Math.ceil(ask/25)*25,0)+'</strong> ('+money(ask/loaded,2)+' per loaded mile).';}
+else{['ld-rpm','ld-rtm'].forEach(function(i){$(i).textContent='—';});$('ld-profit').textContent=money(cost,0);$('ld-verdict').textContent='Your cost to run this trip';$('ld-profit-sub').textContent='enter a rate to see profit';
+var ask2=cost/keep/(1-Math.min(c('profit'),90)/100);$('ld-counter').innerHTML='Ask for at least <strong>'+money(Math.ceil(ask2/25)*25,0)+'</strong> to keep your '+c('profit')+'% profit.';}
+$('ld-results').hidden=false;$('ld-status').textContent=r.pl.filter(Boolean).map(function(p){return p.name;}).join(' to ');
+}).catch(function(e){$('ld-status').textContent=e.message||'Something went wrong. Check the place names and try again.';}).finally(function(){$('ld-go').disabled=false;});}
+$('ld-go').addEventListener('click',go);
+document.querySelectorAll('.route input').forEach(function(i){i.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});
+})();</script>
+"""
+
+LOAD_CSS = """<style>
+.route input{width:min(14rem,55vw);text-align:left}
+.route .btn{margin-top:.6rem;width:100%}
+.mapbox{border:2px solid var(--sign);border-radius:14px;overflow:hidden;margin:.5rem 0 1rem}
+#ld-map{height:min(60vh,420px)}
+</style>"""
+
+
+def write_load_tool(tpl, pages):
+    out = SITE / "tools" / "load-calculator"
+    out.mkdir(parents=True, exist_ok=True)
+    body = (LOAD_TOOL.replace("__ORS__", ORS_API_KEY)
+            + '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">'
+              '<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>'
+            + "".join(partner_box(p) for p in partners_for("calculator")[:2]))
+    # Leaflet must load before the tool script runs
+    body = body.replace("<script>(function(){\nvar KEY", "<script>addEventListener('load',function(){(function(){\nvar KEY", 1).replace("})();</script>\n", "})();});</script>\n", 1)
+    (out / "index.html").write_text(shell(tpl, pages, title="Load profit calculator with route map for truckers",
+        description="Map a load, get loaded and deadhead miles, and see if the rate covers your cost per mile. Free for owner-operators.",
+        path="/tools/load-calculator/", body=body, extra_css=TOOL_CSS + LOAD_CSS))
+    return ["/tools/load-calculator/"]
 
 
 # ---------- shared page shell ----------
@@ -1555,6 +1675,7 @@ def tools_strip():
     tiles = [("/courses/", "Free CDL courses", "12 lessons with quizzes"),
              ("/tools/cdl-practice-test/", "CDL practice test", "49 questions with explanations"),
              ("/tools/cost-per-mile/", "Cost per mile", "Find your break-even rate"),
+             ("/tools/load-calculator/", "Load calculator", "Map the miles, check the rate"),
              ("/guides/", "Guides", "Money, health, repairs, jobs"),
              ("/toolkit/", "Driver toolkit", "Services we recommend"),
              ("/jobs/", "Job board", "New CDL jobs every 6 hours"),
@@ -2578,7 +2699,7 @@ def main():
 
     write_app_files(tpl, pages)
     write_industry(tpl, pages, items)
-    traffic_urls = write_traffic(tpl, pages, items, posts)
+    traffic_urls = write_traffic(tpl, pages, items, posts) + write_load_tool(tpl, pages)
     vdata = update_videos()
     write_videos(tpl, pages, vdata)
     extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + (["/videos/"] if has_videos() else []) + ["/news/", "/industry/"] + state_urls + traffic_urls
