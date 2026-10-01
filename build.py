@@ -956,6 +956,7 @@ def section_page(key, posts, items=()):
                                 '<p class="fine">New job listings load every 6 hours. Check back soon, or try the job boards below.</p>')
         body += newsletter_box()
         body += "".join(partner_box(p) for p in partners)
+        body += state_links_html(load_jobs()[1])
         body += job_boards_html()
         partners = []
     if ours:
@@ -986,7 +987,7 @@ def has_videos():
 
 NAV_PRIMARY = ["/", "/industry/", "/jobs/", "/courses/", "/store/"]   # always shown; the rest go under "More" on phones
 NAV_CSS = """<style>
-.sitenav .nav-more{font:inherit;font-weight:inherit;color:inherit;background:none;border:0;padding:inherit;margin:0;cursor:pointer}
+.sitenav .nav-more{font:inherit;font-weight:inherit;line-height:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;align-self:baseline;-webkit-appearance:none;appearance:none}
 .sitenav .nav-more.here{text-decoration:underline;text-decoration-color:#F2B01E;text-decoration-thickness:3px;text-underline-offset:8px}
 .sitenav .nav-rest{display:none}
 .sitenav.open .nav-rest{display:contents}
@@ -2099,6 +2100,73 @@ bs.forEach(function(b){b.addEventListener('click',function(){c=b.dataset.cat;lim
         description="The latest trucking headlines from across the industry, updated every 30 minutes."))
 
 
+def job_card(j):
+    initial = esc((j.get("company") or "?").strip()[:1].upper())
+    return f"""<article class="jobcard" data-tags="{esc(" ".join(j.get("tags", [])))}" data-state="{esc(j.get("st", ""))}">
+<span class="logo" aria-hidden="true">{initial}</span>
+<h3><a href="/jobs/{j["slug"]}/">{esc(j["title"])}</a></h3>
+<p class="co">{esc(j.get("company", ""))} &middot; {esc(j.get("place") or j.get("location", ""))} &middot; {esc(posted_label(j.get("posted", "")))}</p>
+<div class="tags">{job_tags(j)}</div>
+<a class="btn btn-alt go" href="/jobs/{j["slug"]}/">View job</a>
+</article>"""
+
+
+def state_slug(ab):
+    return slugify(STATE_NAMES[ab])
+
+
+def state_links_html(jobs):
+    counts = {}
+    for j in jobs[:150]:
+        if j.get("st"):
+            counts[j["st"]] = counts.get(j["st"], 0) + 1
+    if not counts:
+        return ""
+    links = "".join(f'<li><a href="/jobs/{state_slug(ab)}/">{esc(STATE_NAMES[ab])}</a> <span class="fine">({n})</span></li>'
+                    for ab, n in sorted(counts.items(), key=lambda x: STATE_NAMES[x[0]]))
+    return (f'<section class="tool-card"><h2>Browse CDL jobs by state</h2>'
+            f'<ul style="columns:2;column-gap:1.5rem;padding-left:1.1rem;margin:.5rem 0">{links}</ul></section>')
+
+
+def write_state_jobs(tpl, pages, jobs):
+    """One page per state: /jobs/texas/ etc. States with no openings right now get a page that search engines skip."""
+    jobs = jobs[:150]
+    by_state = {}
+    for j in jobs:
+        if j.get("st"):
+            by_state.setdefault(j["st"], []).append(j)
+    dat = partner_named("DAT Load Board")
+    urls = []
+    for ab, name in sorted(STATE_NAMES.items(), key=lambda x: x[1]):
+        mine = by_state.get(ab, [])
+        n = len(mine)
+        locals_ = sum(1 for j in mine if "local" in j.get("tags", []))
+        otr = sum(1 for j in mine if "otr" in j.get("tags", []))
+        if n:
+            parts = ([f"{locals_} local or home-daily"] if locals_ else []) + ([f"{otr} OTR"] if otr else [])
+            intro = (f'{n} CDL driving job{"s" if n != 1 else ""} open in {esc(name)} right now'
+                     + (f', including {" and ".join(parts)}' if parts else "") + '. Updated every 6 hours.')
+            listing = "".join(job_card(j) for j in mine)
+        else:
+            intro = f'There are no {esc(name)} openings on our board right now. New jobs are added every 6 hours.'
+            listing = '<p><a class="btn" href="/jobs/">See all trucking jobs</a></p>'
+        body = (f'<p class="meta"><a class="cat" href="/jobs/">OTR News Job Board</a></p>'
+                f'<h1>CDL jobs in {esc(name)}</h1><p class="deck">{intro}</p>{listing}'
+                f'<p class="fine">Confirm pay, home time, and any contract terms with the company before you apply. '
+                f'See our guide to <a href="/news/how-to-read-a-trucking-job-ad/">reading a trucking job ad</a>. '
+                f'Job data powered by <a href="https://www.adzuna.com" target="_blank" rel="noopener">Adzuna</a>.</p>'
+                + newsletter_box() + partner_box(dat) + state_links_html(jobs) + training_box())
+        out = SITE / "jobs" / state_slug(ab)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "index.html").write_text(shell(tpl, pages, title=f"CDL Truck Driving Jobs in {name}", path=f"/jobs/{state_slug(ab)}/",
+            description=(f"{n} CDL truck driving jobs in {name}: local, regional, OTR, and owner-operator openings, updated every 6 hours."
+                         if n else f"CDL truck driving jobs in {name}, updated every 6 hours."),
+            body=body, extra_css=JOBS_CSS + ("" if n else '<meta name="robots" content="noindex">')))
+        if n:
+            urls.append(f"/jobs/{state_slug(ab)}/")
+    return urls
+
+
 def main():
     feeds = read_feeds()
     fresh, ok = [], 0
@@ -2195,6 +2263,7 @@ def main():
         (out / "index.html").write_text(shell(tpl, pages, title=f'{j["title"]} in {j.get("location", "")}',
             description=(j.get("snippet") or "")[:155], path=f'/jobs/{j["slug"]}/',
             body=job_page(j) + newsletter_box() + partner_box(dat) + '<a class="back" href="/jobs/">All trucking jobs</a>', extra_css=JOBS_CSS))
+    state_urls = write_state_jobs(tpl, pages, all_jobs)
     out = SITE / "guides"
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(shell(tpl, pages, title="Trucking guides", description="Practical guides for truck drivers and owner-operators.",
@@ -2243,7 +2312,7 @@ def main():
     write_industry(tpl, pages, items)
     vdata = update_videos()
     write_videos(tpl, pages, vdata)
-    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + (["/videos/"] if has_videos() else []) + ["/news/", "/industry/"]
+    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + (["/videos/"] if has_videos() else []) + ["/news/", "/industry/"] + state_urls
     (SITE / "index.html").write_text(render(items, posts, ok, pages))
     everything = sorted(posts + items, key=lambda i: i["published"], reverse=True)
     (SITE / "feed.xml").write_text(render_rss(everything))
