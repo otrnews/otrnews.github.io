@@ -771,6 +771,7 @@ JOBS_FILE = ROOT / "data" / "jobs.json"
 JOB_TYPES = [("", "All jobs"), ("otr", "OTR"), ("regional", "Regional"), ("local", "Local / home daily"), ("owner", "Owner-operator / lease")]
 
 JOBS_CSS = """<style>
+[hidden]{display:none!important}
 .jobs-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:.5rem;margin-top:1.5rem}
 .jobs-head h2{margin:0}
 .jobs-count{font-weight:700;color:#0a6b47}
@@ -871,6 +872,7 @@ def job_page(j):
 <div class="facts tags">{job_tags(j)}<span class="tag">{esc(posted_label(j.get("posted", "")))}</span></div>
 <div class="body"><h2>About this job</h2><p>{desc}</p></div>
 <p class="apply"><a class="btn" href="{esc(j["url"])}" target="_blank" rel="noopener nofollow">Apply now</a></p>
+{share_html(SITE_URL + "/jobs/" + j["slug"] + "/", j["title"] + " - " + j.get("location", ""), "Know a driver who'd want this? Share it")}
 <p class="fine">You'll finish your application on the hiring company's site. Confirm pay, home time, and any contract terms before you sign. See our guide to <a href="/news/how-to-read-a-trucking-job-ad/">reading a trucking job ad</a>.</p>
 <p class="fine">Job data powered by <a href="https://www.adzuna.com" target="_blank" rel="noopener">Adzuna</a>.</p>
 </article>"""
@@ -1234,6 +1236,7 @@ def community_box():
 
 
 PAGE_CSS = """<style>
+[hidden]{display:none!important}
 .mast.small{padding-top:1.25rem}
 .mast.small .sign-inner{padding:.8rem 1.1rem .7rem}
 .mast.small .logo{font-size:2rem}
@@ -1292,16 +1295,28 @@ def shell(tpl, pages, *, title, description, path, body, og_type="website", ld=N
 </body></html>"""
 
 
+def share_html(url, title, label="Share this story"):
+    """Share buttons. On phones, 'Share' opens the phone's own share menu (Facebook app, Messages, WhatsApp, etc.)."""
+    q = urllib.parse.quote
+    u, t = q(url, safe=""), q(title, safe="")
+    return f"""<div class="share"><span>{esc(label)}</span>
+<button type="button" class="share-native" data-url="{esc(url)}" data-title="{esc(title)}" hidden>Share</button>
+<a href="https://www.facebook.com/sharer/sharer.php?u={u}" target="_blank" rel="noopener">Facebook</a>
+<a href="https://twitter.com/intent/tweet?url={u}&text={t}" target="_blank" rel="noopener">X</a>
+<a href="sms:?&body={t}%20{u}">Text</a>
+<a href="mailto:?subject={t}&body={u}">Email</a>
+<button type="button" class="share-copy" data-url="{esc(url)}">Copy link</button>
+</div>
+<script>(function(){{var s=document.currentScript.previousElementSibling,n=s.querySelector('.share-native'),c=s.querySelector('.share-copy');
+if(navigator.share){{n.hidden=false;n.addEventListener('click',function(){{navigator.share({{title:n.dataset.title,url:n.dataset.url}}).catch(function(){{}});}});}}
+c.addEventListener('click',function(){{if(navigator.clipboard)navigator.clipboard.writeText(c.dataset.url).then(function(){{c.textContent='Link copied';}});}});}})();</script>"""
+
+
 def render_article(p, posts, tpl, pages):
     d = datetime.fromisoformat(p["published"])
     url = SITE_URL + p["link"]
     q = urllib.parse.quote
-    share = f"""<div class="share"><span>Share this story</span>
-<a href="https://www.facebook.com/sharer/sharer.php?u={q(url, safe='')}" target="_blank" rel="noopener">Facebook</a>
-<a href="https://twitter.com/intent/tweet?url={q(url, safe='')}&text={q(p['title'], safe='')}" target="_blank" rel="noopener">X</a>
-<a href="mailto:?subject={q(p['title'], safe='')}&body={q(url, safe='')}">Email</a>
-<button type="button" onclick="navigator.clipboard&&navigator.clipboard.writeText('{url}').then(()=>{{this.textContent='Link copied'}})">Copy link</button>
-</div>"""
+    share = share_html(url, p["title"])
     hero = ""
     if p.get("image"):
         if p.get("credit") and p.get("credit_url"):
@@ -1898,6 +1913,7 @@ def update_videos():
 
 
 VIDEO_CSS = """<style>
+[hidden]{display:none!important}
 .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(16rem,1fr));gap:1rem;margin:1rem 0 1.5rem}
 .vcard{display:flex;flex-direction:column;gap:.35rem}
 .vplay{position:relative;display:block;width:100%;aspect-ratio:16/9;border:0;padding:0;border-radius:10px;overflow:hidden;cursor:pointer;background:#111}
