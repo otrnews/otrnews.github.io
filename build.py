@@ -1134,7 +1134,7 @@ TOOL_CSS = """<style>
 </style>"""
 
 
-ORS_API_KEY = ""   # optional: free key from openrouteservice.org turns on truck (HGV) routing; blank uses standard road routing
+ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjI2ZjJmOWI0NWYxODQ0N2U4ZTRlMDNmNjc1OTIwZGQ0IiwiaCI6Im11cm11cjY0In0="   # optional: free key from openrouteservice.org turns on truck (HGV) routing; blank uses standard road routing
 
 LOAD_TOOL = r"""
 <h1>Load profit calculator</h1>
