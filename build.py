@@ -22,7 +22,9 @@ SITE_URL = "https://otrnews.com"
 SITE_NAME = "OTR News"
 TAGLINE = "Trucking news for owner-operators, small fleets, and drivers."
 CONTACT_EMAIL = "news@otrnews.com"   # turns on the Contact page ("" to hide)
-NEWSLETTER_URL = ""     # e.g. your Beehiiv signup link — turns on signup boxes
+NEWSLETTER_URL = "https://www.mycdlcoach.com/offers/uLgiTonu/checkout"  # signup link (free CDL Truck Driver Guide on Kajabi)
+NEWSLETTER_GIFT = "the free CDL Truck Driver Guide"  # what people get for signing up ("" for none)
+COMMUNITY_URL = "https://www.mycdlcoach.com/offers/DzKSWbj5/checkout"  # The Driver's Lounge (free)
 PARENT_BRAND = "MyCDLCoach"            # shown as "OTR News is a MyCDLCoach company"
 TRAINING_URL = "https://mycdlcoach.com"  # where "Get your CDL" buttons send people
 TRAINING_PRICE = "$149"                 # shown on the training box ("" to hide)
@@ -31,7 +33,7 @@ TRAINING_REGISTERED = False            # set True once FMCSA's Training Provider
 GOOGLE_ANALYTICS_ID = ""      # e.g. "G-ABC123XYZ" from Google Analytics
 PLAUSIBLE_DOMAIN = ""         # e.g. "otrnews.com" if you use Plausible instead
 GOOGLE_SITE_VERIFICATION = "" # the content="..." code from Google Search Console's HTML tag option
-LODOSHOP_URL = ""             # paste your LodoShop store link here (e.g. "https://yourstore.com") to show it as a partner
+LODOSHOP_URL = "https://lodoshop.com"             # paste your LodoShop store link here (e.g. "https://yourstore.com") to show it as a partner
 
 # Partner (referral) links. The site picks a matching partner for each page by topic.
 # To add one, copy a block. To pause one, put # in front of each of its lines.
@@ -66,11 +68,6 @@ PARTNERS = [
      "cta": "Try Zoho", "topics": ["Business"],
      "banner": "/partners/partner-zoho.webp", "banner_alt": "Zoho One. Has work got you juggling applications?",
      "banner_w": 700, "banner_h": 300},
-    {"name": "LodoShop", "url": LODOSHOP_URL,
-     "blurb": "Discount and liquidation deals on everyday gear, tools, and household goods.",
-     "cta": "Shop deals", "topics": ["Drivers", "Equipment"],
-     "logo": "/partners/partner-lodoshop.webp", "logo_alt": "LodoShop", "logo_w": 237, "logo_h": 240,
-     "disclosure": "Sponsor. LodoShop is affiliated with OTR News."},
 ]
 # ==========================================================
 
@@ -939,7 +936,7 @@ NAV = [("/", "Latest"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/t
 def nav_html(current=""):
     return '<nav class="sitenav" aria-label="Site">' + "".join(
         f'<a href="{u}"' + (' aria-current="page"' if u == current else "") + f">{t}</a>"
-        for u, t in (NAV[:-1] + [("/store/", "Store"), NAV[-1]] if EBOOKS else NAV)) + "</nav>"
+        for u, t in (NAV[:-1] + ([("/store/", "Store")] if EBOOKS else []) + ([(COMMUNITY_URL, "Community")] if COMMUNITY_URL else []) + NAV[-1:])) + "</nav>"
 
 
 def topic_slug(cat):
@@ -1064,7 +1061,7 @@ def footer_links(pages):
     links = [("/about/", "About")]
     if "contact" in pages:
         links.append(("/contact/", "Contact"))
-    links += [("/briefing/", "Briefing"), ("/courses/", "Free courses"), ("/app/", "Get the app"), ("/privacy/", "Privacy"), ("/feed.xml", "RSS")]
+    links += ([(COMMUNITY_URL, "Driver's Lounge")] if COMMUNITY_URL else []) + [("/briefing/", "Briefing"), ("/courses/", "Free courses"), ("/app/", "Get the app"), ("/privacy/", "Privacy"), ("/feed.xml", "RSS")]
     return "&ensp;".join(f'<a href="{u}">{t}</a>' for u, t in links)
 
 
@@ -1186,9 +1183,35 @@ def newsletter_box():
     if not NEWSLETTER_URL:
         return ""
     return f"""<aside class="signup">
-<h2>Get the OTR News briefing</h2>
-<p>The trucking news that matters, new driving jobs, and our latest guides, in your inbox before you roll. Free.</p>
-<a class="btn" href="{esc(NEWSLETTER_URL)}" target="_blank" rel="noopener">Sign up free</a>
+<h2>{"Get " + esc(NEWSLETTER_GIFT) if NEWSLETTER_GIFT else "Get the OTR News briefing"}</h2>
+<p>{"Sign up free and we'll send it right away, plus" if NEWSLETTER_GIFT else "Get"} the weekly OTR News briefing: the trucking news that matters, new driving jobs, and our latest guides.</p>
+<a class="btn" href="{esc(NEWSLETTER_URL)}" target="_blank" rel="noopener">{"Get it free" if NEWSLETTER_GIFT else "Sign up free"}</a>
+</aside>"""
+
+
+def lodoshop_ad():
+    """A simple ad for LodoShop (not a partner/sponsor box)."""
+    if not LODOSHOP_URL:
+        return ""
+    url = LODOSHOP_URL + ("&" if "?" in LODOSHOP_URL else "?") + "utm_source=otrnews&utm_medium=ad"
+    return f"""<aside class="lodo-ad" aria-label="Advertisement">
+<p class="fine" style="margin:0 0 .4rem;letter-spacing:.04em;text-transform:uppercase">Ad</p>
+<a href="{esc(url)}" target="_blank" rel="noopener" style="display:flex;gap:1rem;align-items:center;text-decoration:none;color:inherit;border:1px solid #dfe5e1;border-radius:12px;padding:.9rem 1rem;background:#fff">
+<img src="/partners/partner-lodoshop.webp" alt="LodoShop" width="72" height="73" style="flex:none;border-radius:8px">
+<span><strong style="display:block;font-size:1.05rem;color:#111">Big brands. Bigger savings.</strong>
+<span style="color:#333">Discount deals on everyday gear, tools, and household goods at LodoShop.</span>
+<span style="display:block;margin-top:.35rem;font-weight:800;color:#b3121b">Shop deals &rarr;</span></span></a>
+</aside>"""
+
+
+def community_box():
+    if not COMMUNITY_URL:
+        return ""
+    return f"""<aside class="cta mcc">
+<p class="kicker"><img class="mcc-shield" src="/partners/mycdlcoach-shield.webp" alt="" width="22" height="24">The Driver's Lounge</p>
+<h2>Join the Driver's Lounge</h2>
+<p>A free community for CDL students, drivers, and owner-operators. Ask questions, share what's working, join weekly challenges and live meetups, and get our free checklists. Free to join on the {esc(PARENT_BRAND)} app.</p>
+<a class="btn" href="{esc(COMMUNITY_URL)}" target="_blank" rel="noopener">Join free</a>
 </aside>"""
 
 
@@ -1286,6 +1309,7 @@ def render_article(p, posts, tpl, pages):
 </article>
 {training_box()}
 {partner_box(partner_named(p['partner'])) if p.get('partner') and partner_named(p['partner']) else ("".join(partner_box(x) for x in section_partners(p.get('section', ''))) or partner_box(pick_partner(p['category'], p['slug'])))}
+{lodoshop_ad()}
 {newsletter_box()}
 {more}
 <a class="back" href="/">All trucking news</a>"""
@@ -1405,6 +1429,7 @@ def render(items, originals, sources_ok, pages):
         industry_intro = '<h2 class="section-title" id="industry">Around the industry</h2>'
         parts = [story_html(i) for i in feed]
         parts.insert(min(8, len(parts)), partner_box(pick_partner("Industry", "home")))
+        parts.insert(min(20, len(parts)), lodoshop_ad())
         feed_html = "\n".join(parts)
     else:
         ours, industry_intro = "", ""
@@ -1419,7 +1444,7 @@ def render(items, originals, sources_ok, pages):
                .replace("{{SOURCE_COUNT}}", str(sources_ok))
                .replace("{{CHIPS}}", chips)
                .replace("{{ORIGINALS}}", ours)
-               .replace("{{NEWSLETTER}}", tools_strip() + newsletter_box() + question_of_the_day() + jobs_strip() + training_box())
+               .replace("{{NEWSLETTER}}", tools_strip() + newsletter_box() + question_of_the_day() + jobs_strip() + community_box() + training_box())
                .replace("{{PARENT}}", parent_line())
                .replace("{{INDUSTRY_TITLE}}", industry_intro)
                .replace("{{STORIES}}", feed_html)
@@ -1595,7 +1620,7 @@ def write_courses(tpl, pages):
     body = ('<h1>Free CDL courses</h1><p class="deck">Short lessons with quizzes on the three CDL knowledge tests most drivers take: '
             'general knowledge, air brakes, and combination vehicles. Free, no signup, study on your phone.</p>'
             + "".join(course_card(c) for c in COURSES) + COURSE_NOTE
-            + '<p><a class="btn btn-alt" href="/tools/cdl-practice-test/">Take the full practice test</a></p>' + training_box() + PROGRESS_JS)
+            + '<p><a class="btn btn-alt" href="/tools/cdl-practice-test/">Take the full practice test</a></p>' + community_box() + training_box() + PROGRESS_JS)
     (out / "index.html").write_text(shell(tpl, pages, title="Free CDL courses: general knowledge, air brakes, combination vehicles",
         description="Free CDL study courses with short lessons and quizzes on general knowledge, air brakes, and combination vehicles.",
         path="/courses/", body=body, extra_css=COURSE_CSS))
@@ -1649,12 +1674,12 @@ EBOOKS = [e for e in EBOOKS if e.get("title") and e.get("url") and e.get("slug")
 STORE_CSS = """<style>
 .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(10.5rem,1fr));gap:1rem;margin:1.25rem 0}
 .book{display:flex;flex-direction:column;gap:.4rem;text-decoration:none;color:inherit}
-.book img,.book .nocover{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.book img,.book .nocover{width:100%;aspect-ratio:3/4;object-fit:contain;background:#eef1ef;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 .book .nocover{display:grid;place-items:center;text-align:center;padding:1rem;background:#00603C;color:#fff;font-weight:800}
 .book strong{font-size:1rem;line-height:1.25}
 .book .price{font-weight:800;color:#00603C}
 .book-hero{display:grid;grid-template-columns:minmax(8rem,12rem) 1fr;gap:1.25rem;align-items:start;margin:1rem 0}
-.book-hero img,.book-hero .nocover{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.book-hero img,.book-hero .nocover{width:100%;aspect-ratio:3/4;object-fit:contain;background:#eef1ef;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .book-hero .nocover{display:grid;place-items:center;text-align:center;padding:1rem;background:#00603C;color:#fff;font-weight:800}
 .book-hero .price{font-size:1.6rem;font-weight:900;margin:.25rem 0 .75rem}
 @media (max-width:34rem){.book-hero{grid-template-columns:1fr}.book-hero img,.book-hero .nocover{max-width:12rem}}
@@ -1673,16 +1698,28 @@ def write_store(tpl, pages):
         return []
     out = SITE / "store"
     out.mkdir(parents=True, exist_ok=True)
-    cards = "".join(f'<a class="book" href="/store/{e["slug"]}/">{cover_html(e)}<strong>{esc(e["title"])}</strong>'
-                    f'<span class="price">{esc(e.get("price", ""))}</span></a>' for e in EBOOKS)
+    def card(e):
+        return (f'<a class="book" href="/store/{e["slug"]}/">{cover_html(e)}<strong>{esc(e["title"])}</strong>'
+                f'<span class="price">{esc(e.get("price", ""))}</span></a>')
+    free = [e for e in EBOOKS if e.get("price", "").lower() == "free"]
+    paid = [e for e in EBOOKS if e not in free]
     body = ('<h1>OTR News Store</h1><p class="deck">Ebooks and guides for drivers, owner-operators, and small fleets. '
-            'Instant download after purchase.</p>' + f'<div class="shelf">{cards}</div>' + newsletter_box() + training_box())
+            'Instant download.</p>' + f'<div class="shelf">{"".join(card(e) for e in paid)}</div>'
+            + (f'<h2 class="section-title">Free downloads</h2><div class="shelf">{"".join(card(e) for e in free)}</div>' if free else "")
+            + newsletter_box() + community_box() + training_box())
     (out / "index.html").write_text(shell(tpl, pages, title="Trucking ebooks and guides", path="/store/", body=body, extra_css=STORE_CSS,
         description="Ebooks for truck drivers, owner-operators, and small fleets from OTR News."))
     urls = ["/store/"]
     for e in EBOOKS:
         inside = "".join(f"<li>{esc(x)}</li>" for x in e.get("inside", []))
-        buy = f'<a class="btn" href="{esc(e["url"])}" target="_blank" rel="noopener">Buy now{(" " + esc(e["price"])) if e.get("price") else ""}</a>'
+        e_url = e["url"] + ("&" if "?" in e["url"] else "?") + "utm_source=otrnews&utm_medium=store&utm_campaign=" + e["slug"]
+        is_free = e.get("price", "").lower() == "free"
+        buy = (f'<a class="btn" href="{esc(e_url)}" target="_blank" rel="noopener">Get it free</a>' if is_free else
+               f'<a class="btn" href="{esc(e_url)}" target="_blank" rel="noopener">Buy now{(" " + esc(e["price"])) if e.get("price") else ""}</a>')
+        if e.get("options"):  # several versions, e.g. Ebook / Ebook + Audiobook
+            buy = " ".join(f'<a class="btn{"" if n == 0 else " btn-alt"}" href="{esc(o["url"] + ("&" if "?" in o["url"] else "?") + "utm_source=otrnews&utm_medium=store&utm_campaign=" + e["slug"])}" '
+                           f'target="_blank" rel="noopener">{esc(o["label"])}{(" " + esc(o["price"])) if o.get("price") else ""}</a>'
+                           for n, o in enumerate(e["options"]))
         others = "".join(f'<a class="book" href="/store/{x["slug"]}/">{cover_html(x)}<strong>{esc(x["title"])}</strong>'
                          f'<span class="price">{esc(x.get("price", ""))}</span></a>' for x in EBOOKS if x["slug"] != e["slug"])[:4000]
         bbody = (f'<p class="meta"><a class="cat" href="/store/">OTR News Store</a></p>'
@@ -1690,19 +1727,20 @@ def write_store(tpl, pages):
                  + (f'<p class="deck">{esc(e["subtitle"])}</p>' if e.get("subtitle") else "")
                  + (f'<p class="price">{esc(e["price"])}</p>' if e.get("price") else "") + buy
                  + (f'<p class="fine">{esc(e["pages"])}. Instant download.</p>' if e.get("pages") else '<p class="fine">Instant download.</p>')
+                 + ('<p class="fine">Choose ebook only, or ebook plus audiobook.</p>' if e.get("options") else "")
                  + '</div></div>'
                  + (f'<div class="body"><p>{esc(e["description"])}</p></div>' if e.get("description") else "")
                  + (f'<section class="tool-card"><h2>What\'s inside</h2><ul>{inside}</ul></section>' if inside else "")
                  + f'<p>{buy}</p>'
                  + (f'<h2 class="section-title">More from the store</h2><div class="shelf">{others}</div>' if others else "")
                  + training_box())
-        price_num = re.sub(r"[^0-9.]", "", e.get("price", ""))
+        price_num = "0" if is_free else re.sub(r"[^0-9.]", "", e.get("price", "") or (e.get("options") or [{}])[0].get("price", ""))
         ld = {"@context": "https://schema.org", "@type": "Product", "name": e["title"], "description": e.get("description", ""),
               "brand": {"@type": "Brand", "name": SITE_NAME}}
         if e.get("cover"):
             ld["image"] = SITE_URL + e["cover"] if e["cover"].startswith("/") else e["cover"]
         if price_num:
-            ld["offers"] = {"@type": "Offer", "price": price_num, "priceCurrency": "USD", "url": e["url"], "availability": "https://schema.org/InStock"}
+            ld["offers"] = {"@type": "Offer", "price": price_num, "priceCurrency": "USD", "url": e_url, "availability": "https://schema.org/InStock"}
         d = out / e["slug"]
         d.mkdir(parents=True, exist_ok=True)
         (d / "index.html").write_text(shell(tpl, pages, title=e["title"], path=f'/store/{e["slug"]}/', body=bbody, ld=ld, extra_css=STORE_CSS,
