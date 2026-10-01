@@ -38,7 +38,8 @@ PLAUSIBLE_DOMAIN = ""         # e.g. "otrnews.com" if you use Plausible instead
 GOOGLE_SITE_VERIFICATION = "" # the content="..." code from Google Search Console's HTML tag option
 BING_SITE_VERIFICATION = ""   # the content="..." code from Bing Webmaster Tools' meta tag option
 INDEXNOW_KEY = "0dbfb7d2ab66d32e17ef4a7af9a98a34"  # lets Bing/MSN/Yandex know about new stories within minutes (leave as is)
-SOCIAL_PROFILES = []           # your public pages, e.g. ["https://www.facebook.com/otrnews", "https://www.instagram.com/otrnews"]
+SOCIAL_PROFILES = ["https://www.facebook.com/Otrnewsmedia", "https://www.instagram.com/otrnewsmedia/",
+                   "https://www.youtube.com/@otrnewschannel"]   # shown as "Follow us" links and told to Google
 LODOSHOP_URL = "https://lodoshop.com"             # paste your LodoShop store link here (e.g. "https://yourstore.com") to show it as a partner
 
 # Partner (referral) links. The site picks a matching partner for each page by topic.
@@ -586,6 +587,99 @@ QUIZ = [
     ["Combination vehicles", "What is the best way to prevent rollovers?",
      ["Keep the cargo as low as possible and go slowly around turns", "Load the heaviest cargo on top", "Keep a full fuel tank", "Take curves in a higher gear"],
      "Keeping the center of gravity low and slowing down for turns and ramps are the keys to preventing rollovers."],
+    # ---- more questions (added Oct 2026; keep new ones at the end so course lessons keep working) ----
+    ['General knowledge', 'You drive a 60-foot rig at 50 mph. What is the minimum following distance?', ['7 seconds', '6 seconds', '4 seconds', '10 seconds'], "Use 1 second per 10 feet of length (6 seconds), plus 1 second because you're over 40 mph."],
+    ['General knowledge', 'During a pre-trip inspection, steering wheel play is too much if it is more than about:', ['10 degrees (about 2 inches on a 20-inch wheel)', '45 degrees', '1 degree', '30 degrees (about 6 inches)'], 'More than about 10 degrees of free play makes it hard to steer.'],
+    ['General knowledge', 'What is the minimum tread depth for tires other than the steering axle?', ['2/32 inch', '4/32 inch', '1/32 inch', '6/32 inch'], 'Other tires need at least 2/32 inch; front steer tires need 4/32 inch.'],
+    ['General knowledge', 'Which wheel or rim condition is a defect?', ['Welding repairs on the rim', 'A clean rim with no rust', 'Matching lug nuts', 'Rims of the same size on an axle'], 'Rims with welding repairs are not allowed. Rust trails around lug nuts can also mean loose nuts.'],
+    ['General knowledge', 'When is the safest time to brake for a curve?', ['Before you enter the curve', 'In the middle of the curve', 'As you exit the curve', 'Whenever you feel the trailer lean'], 'Slow down before the curve. Braking in a curve can lock wheels and cause a skid.'],
+    ['General knowledge', 'What is the only real cure for drowsiness?', ['Sleep', 'Coffee', 'Opening a window', 'Loud music'], 'Caffeine and cold air may help briefly, but only sleep fixes fatigue.'],
+    ['General knowledge', 'What sobers up a person who has been drinking?', ['Only time', 'Black coffee', 'A cold shower', 'Exercise'], 'The body gets rid of alcohol at a fixed rate. Nothing speeds it up.'],
+    ['General knowledge', 'Which fire extinguisher type is used on electrical fires and burning liquids?', ['B:C', 'A only', 'Water', 'D'], 'B:C extinguishers are for electrical fires and burning liquids. Never use water on them.'],
+    ['General knowledge', 'Your vehicle has no antilock brakes. In an emergency, which braking method keeps you in control?', ['Controlled or stab braking', 'Slamming the brakes as hard as possible', 'Pumping the parking brake', 'Shifting into neutral and coasting'], 'Controlled braking (firm without locking) or stab braking (full on, release when wheels lock) keeps steering control.'],
+    ['General knowledge', 'How should you brake in an emergency if your vehicle has antilock brakes (ABS)?', ['Brake as hard as needed and let ABS work', 'Pump the brakes rapidly', 'Use only the trailer brakes', 'Stab brake'], "With ABS, brake as you normally would. Don't pump the pedal."],
+    ['General knowledge', 'Your brakes fail on a downgrade. What should you look for?', ['An escape ramp', 'A rest area', 'A soft shoulder downhill', 'A gas station'], 'Escape ramps are built to stop runaway vehicles safely.'],
+    ['General knowledge', 'A front tire blows out. What should you do first?', ['Hold the wheel firmly and stay off the brake until you slow down', 'Brake hard right away', 'Steer sharply to the shoulder', 'Shift into neutral and brake'], 'Hard braking can make you lose control. Hold your lane and let the truck slow, then brake gently.'],
+    ['General knowledge', 'If you must leave the road to avoid a crash, avoid braking until your speed drops to about:', ['20 mph', '45 mph', '5 mph', '35 mph'], 'Braking on a soft shoulder at high speed can cause a skid. Wait until about 20 mph, then brake gently.'],
+    ['General knowledge', 'In a drive-wheel acceleration skid, you should:', ['Stop accelerating and push in the clutch or shift to neutral', 'Brake hard', 'Accelerate to pull out of it', 'Turn the wheel sharply away'], 'Taking power off the drive wheels lets them regain traction.'],
+    ['General knowledge', 'Black ice is dangerous because the road:', ['Looks wet but is actually icy', 'Looks white and snowy', 'Is always marked by signs', 'Only forms in daylight'], 'Black ice is a thin, clear layer. If the road looks wet in freezing weather, assume ice.'],
+    ['General knowledge', 'After driving through deep water, how do you dry your brakes?', ['Drive slowly in low gear with light pressure on the brake', 'Brake hard several times at highway speed', 'Park and wait 30 minutes', 'Use only the parking brake'], 'Light brake pressure while moving slowly heats and dries the linings.'],
+    ['General knowledge', 'On a hot day, what should you never do to a hot tire?', ['Let air out of it', 'Check its pressure', 'Look at its tread', 'Feel it carefully'], 'Pressure rises when tires heat up. Letting air out leaves the tire underinflated once it cools.'],
+    ['General knowledge', 'Your engine is overheating. What should you not do?', ['Remove the radiator cap while the engine is hot', 'Check the coolant level when cool', 'Watch the temperature gauge', 'Stop safely and let it cool'], 'The cooling system is under pressure. Opening it hot can spray scalding coolant.'],
+    ['General knowledge', 'If you must stop at a railroad crossing, how far from the nearest rail should you stop?', ['15 to 50 feet', '5 to 10 feet', '60 to 100 feet', 'Right at the rail'], 'Stop between 15 and 50 feet from the nearest rail where you can see clearly.'],
+    ['General knowledge', 'How should cargo weight be loaded?', ['Low and balanced across the axles', 'As high as possible', 'All on the rear axle', 'All toward one side'], 'A low, centered load keeps the center of gravity down and reduces rollover risk.'],
+    ['General knowledge', 'What does a header board (headache rack) do?', ['Protects you from cargo shifting forward', 'Holds the license plate', 'Improves fuel economy', 'Lights the trailer at night'], 'A header board can keep cargo from crushing the cab in a sudden stop or crash.'],
+    ['General knowledge', "You're hauling a sealed load you can't inspect. What should you still check?", ["That you don't exceed gross weight and axle limits", "Nothing, since it's sealed", 'Only the paperwork', 'The cargo, by breaking the seal'], "Even when you can't see the cargo, you're responsible for weight limits."],
+    ['General knowledge', 'On a divided or one-way highway, where do you place warning devices?', ['10, 100, and 200 feet back toward approaching traffic', 'Only one, 50 feet in front', '100 feet in front and behind', 'Next to the cab'], 'On one-way or divided roads, all three go behind the vehicle at 10, 100, and 200 feet.'],
+    ['General knowledge', 'If a hill or curve hides your stopped vehicle, how far back can the rear warning device go?', ['100 to 500 feet', '10 to 50 feet', '1,000 feet', 'At the vehicle'], 'Move the rear triangle back as far as 500 feet so drivers get enough warning.'],
+    ['General knowledge', 'When an intersection has two left-turn lanes, which should you use?', ['The right-hand (outer) left-turn lane', 'The left-hand (inner) lane', 'Either one', 'The right lane, then turn'], 'Starting in the outer lane gives you room for the trailer and keeps traffic on your left.'],
+    ['General knowledge', "Why is backing toward the driver's side safer?", ['You can see better', 'It uses less fuel', "It's required by law", 'Mirrors only work on that side'], "Backing toward the driver's side lets you watch the rear of the vehicle out the window."],
+    ['General knowledge', 'How should you drive in fog?', ['Slow down and use low beams', 'Use high beams', 'Speed up to get through it', 'Follow the taillights ahead closely'], 'High beams reflect off fog. Slow down and use low beams and fog lights.'],
+    ['General knowledge', 'On a wet road, reduce your speed by about:', ['One-third', 'One-tenth', 'Half or more', 'Nothing if your tires are good'], 'Wet roads can double stopping distance. Slow by about one-third, and by half or more on packed snow.'],
+    ['General knowledge', 'On packed snow, reduce your speed by:', ['One-half or more', 'One-third', '5 mph', 'Nothing with chains'], 'Packed snow cuts traction sharply. Slow by half or more.'],
+    ['General knowledge', 'Refusing an alcohol test while driving a CMV (first offense) disqualifies you for at least:', ['1 year', '60 days', '6 months', '30 days'], 'Refusing a test is treated like failing it. First offense is at least a 1-year disqualification.'],
+    ['General knowledge', 'A first railroad-highway grade crossing violation disqualifies you for at least:', ['60 days', '1 year', '10 days', 'No disqualification'], 'First offense is at least 60 days; a second within 3 years is at least 120 days.'],
+    ['General knowledge', 'What is the first step of the seven-step vehicle inspection?', ['Vehicle overview', 'Check the brakes', 'Walk-around inspection', 'Start the engine'], "Start by looking at the vehicle's general condition, leaks, and the last inspection report."],
+    ['General knowledge', 'What should you look for as you approach the vehicle on a pre-trip inspection?', ["Damage, leaks, and if it's leaning", 'The fuel price', 'The trailer number only', "Nothing until you're in the cab"], 'Leaning can mean broken suspension or flat tires. Puddles can mean leaks.'],
+    ['General knowledge', "What does a 'jake brake' or engine retarder do?", ['Helps slow the vehicle and reduces brake wear', 'Increases speed downhill', 'Replaces the service brakes', 'Locks the drive wheels'], 'Retarders slow the vehicle. Turn them off on slippery roads, where they can cause skids.'],
+    ['General knowledge', 'When should you turn off the engine retarder?', ['On wet, icy, or snowy roads', 'On dry downgrades', 'In heavy traffic only', 'Never'], 'On slippery roads, a retarder can make the drive wheels skid.'],
+    ['General knowledge', 'Which hazard is a clue that another driver may pull out?', ['A car with its wheels turned toward the road', 'A parked car with no driver', 'A car in a driveway with taillights off', 'A car parked far from the road'], 'Watch for wheel direction, brake lights, and exhaust from parked cars.'],
+    ['General knowledge', 'When driving at night, how far should your low beams let you see?', ['About 250 feet ahead', 'About 1,000 feet ahead', 'About 50 feet ahead', 'As far as high beams'], 'Low beams reach about 250 feet, so slow down enough to stop within that distance.'],
+    ['General knowledge', 'Before you drive under a bridge or overpass, what should you know?', ["Your vehicle's height", "The bridge's age", 'The speed limit only', 'Nothing; clearance signs are always exact'], "Repaving and snow can lower clearance. Know your height and don't trust signs blindly."],
+    ['General knowledge', 'Why should you make a wide right turn by swinging wide as you complete the turn, not before it?', ['To keep cars from passing you on the right', 'To save fuel', 'To make the turn faster', "It's easier on the tires"], 'Starting wide invites cars to squeeze in on your right.'],
+    ['General knowledge', 'On a steep downgrade, what controls your speed most safely?', ['Low gear plus light, steady braking as needed', 'Riding the brakes the whole way', 'Coasting in neutral', 'High gear and hard braking at the bottom'], "Engine braking in low gear does most of the work so the service brakes don't overheat."],
+    ['General knowledge', 'Coasting in neutral is dangerous because:', ['You lose engine braking and may not get back into gear', 'It burns more fuel', "It's only legal on flat roads", 'It wears out the clutch'], "In neutral, the engine can't help slow you, and shifting back in can be hard at speed."],
+    ['General knowledge', 'When should you use your four-way flashers?', ['When stopped on the side of the road', 'Whenever it rains', 'When passing', 'While parked in a lot'], "Flashers warn others you're stopped. Put out warning devices within 10 minutes too."],
+    ['General knowledge', 'How should you check your mirrors?', ['Regularly, and more often in special situations', 'Only when changing lanes', 'Once at the start of the trip', 'Only when backing'], 'Check mirrors often, and more often when changing lanes, turning, or merging.'],
+    ['General knowledge', 'Which is the safest way to handle a tailgater?', ['Increase your following distance and avoid quick changes', 'Brake to warn them', 'Speed up a lot', 'Flash your lights'], "More space ahead gives you room to slow gradually so the tailgater isn't surprised."],
+    ['General knowledge', "What is 'hazmat' cargo required to display on all four sides when placarded?", ['Placards', 'Company logos', 'Reflective tape only', 'Nothing'], 'Placarded vehicles must show the right placards on the front, rear, and both sides.'],
+    ['Air brakes', 'Most heavy vehicles with air brakes have which three braking systems?', ['Service, parking, and emergency', 'Front, rear, and trailer', 'Air, hydraulic, and engine', 'Disc, drum, and wedge'], 'Service brakes for normal stops, parking brakes to hold the vehicle, and emergency brakes when something fails.'],
+    ['Air brakes', 'What does the application pressure gauge show?', ['How much air pressure you are applying to the brakes', 'Pressure in the air tanks', 'Engine oil pressure', 'Tire pressure'], "It shows how hard you're braking. Rising pressure to hold speed can mean brake fade."],
+    ['Air brakes', 'Why do you drain air tanks?', ['To remove water and compressor oil', 'To lower tire pressure', 'To test the horn', 'To cool the brakes'], 'Water and oil can freeze or damage parts and cause brake failure.'],
+    ['Air brakes', 'The safety relief valve opens to release air at about:', ['150 psi', '60 psi', '100 psi', '200 psi'], 'It protects the tanks from too much pressure if the governor fails.'],
+    ['Air brakes', 'What holds spring brakes off when the vehicle is ready to drive?', ['Air pressure', 'Hydraulic fluid', 'A cable', 'Engine oil pressure'], "Strong springs apply the brakes. Air pressure holds them back until it's released or lost."],
+    ['Air brakes', 'How do you set the parking brake on most newer air-brake trucks?', ['Pull out the yellow diamond-shaped knob', 'Push in the red knob', 'Press the brake pedal three times', 'Turn the key off'], 'Pull the yellow knob out to set the parking brake; push it in to release.'],
+    ['Air brakes', "Why shouldn't you press the brake pedal when the spring brakes are on?", ['The combined force can damage the brakes', 'It drains the fuel', 'It turns on the hazards', 'It releases the parking brake'], 'Spring force plus service brake force can damage brake parts.'],
+    ['Air brakes', 'In a dual air system, the primary system usually operates the brakes on the:', ['Rear axle or axles', 'Front axle', 'Trailer only', 'Steering axle and trailer'], 'The primary system usually handles the rear axles; the secondary handles the front axle and sometimes one rear axle.'],
+    ['Air brakes', 'How do you test the parking brake?', ['Set it and gently pull against it in a low gear', 'Drive fast and pull the knob', 'Push the brake pedal with the engine off', 'Listen for air leaks'], 'The parking brake should hold the vehicle when you gently try to pull away.'],
+    ['Air brakes', 'To test the service brakes, drive at about 5 mph and brake firmly. What signals a problem?', ['The vehicle pulls to one side or stops slowly', 'The vehicle stops straight', 'You hear the air dryer purge', 'The application gauge rises'], 'Pulling or a delayed stop means the brakes need attention.'],
+    ['Air brakes', 'With air brakes, total stopping distance includes perception, reaction, braking, and:', ['Brake lag distance', 'Clutch distance', 'Shift distance', 'Tire warm-up distance'], 'Air takes time to flow to the brakes, which adds distance.'],
+    ['Air brakes', 'At 55 mph on dry pavement, brake lag adds about how much stopping distance?', ['32 feet', '5 feet', '100 feet', '300 feet'], 'The half-second of brake lag at 55 mph adds about 32 feet.'],
+    ['Air brakes', 'Brake fade is mainly caused by:', ['Too much heat from overusing the brakes', 'Cold weather', 'Low tire pressure', 'Driving too slowly'], 'Hot brakes lose stopping power. Use low gears and proper braking on downgrades.'],
+    ['Air brakes', 'Which brakes fade first?', ['Brakes that are out of adjustment', 'Brakes on the steer axle', 'New brakes', 'Trailer brakes'], 'Out-of-adjustment brakes stop doing their share, so the others overheat and fade.'],
+    ['Air brakes', 'If an automatic slack adjuster is out of adjustment, what does that usually mean?', ["There's a mechanical problem that needs repair", "It's working normally", 'You should adjust it by hand and keep driving', 'The air pressure is too high'], "Automatic slack adjusters shouldn't need manual adjustment. If they're out, get the brakes checked."],
+    ['Air brakes', 'If your vehicle loses all of its air pressure, what happens?', ['The spring brakes come on', 'The brakes release completely', 'The engine shuts off', 'Nothing changes'], 'Spring brakes are designed to apply when air is lost.'],
+    ['Air brakes', "A 'wig wag' warning device drops into view when air pressure falls below:", ['60 psi', '100 psi', '20 psi', '125 psi'], "It's a mechanical low-pressure warning that drops into the driver's view."],
+    ['Air brakes', 'When should you not use the parking brakes?', ['When the brakes are very hot or wet in freezing weather', 'When parked on a hill', 'Overnight at a truck stop', 'When the engine is off'], 'Hot brakes can be damaged, and wet brakes can freeze. Use wheel chocks instead.'],
+    ['Air brakes', 'What is another name for the air brake pedal?', ['Foot valve or treadle valve', 'Governor', 'Relay valve', 'Glad hand'], 'Pressing the foot valve lets air into the brake chambers.'],
+    ['Air brakes', 'What drives the air compressor?', ['The engine, through gears or a belt', 'The battery', 'The wheels', 'The transmission only'], 'The engine-driven compressor pumps air into the tanks.'],
+    ['Air brakes', 'Before driving an air-brake vehicle, you should wait until:', ['The low-pressure warning goes off and pressure is normal', 'The engine has idled 30 minutes', 'The air dryer stops purging', 'Pressure reaches 60 psi'], 'Never drive until the warning device shuts off and pressure is at normal level.'],
+    ['Air brakes', 'Brake drums should not have cracks longer than:', ['Half the width of the friction area', '1 inch total', 'Any visible length', 'The full width of the drum'], 'Long cracks mean the drum must be replaced.'],
+    ['Air brakes', 'Air brake linings should never be:', ['Loose, soaked with oil or grease, or dangerously thin', 'Dry', 'Dark in color', 'Made of composite material'], "Damaged or oily linings can't stop the vehicle safely."],
+    ['Air brakes', 'What does the governor control?', ['When the compressor pumps air into the tanks', 'Engine speed', 'Brake lining temperature', 'Trailer lights'], 'The governor turns compressor pumping on and off at set pressures.'],
+    ['Air brakes', 'What does a stop light switch on an air brake system do?', ['Turns on brake lights when you apply the brakes', 'Shuts off the engine', 'Drains the tanks', 'Sets the parking brake'], "It's an air-pressure switch that lights the brake lights so drivers behind you know you're stopping."],
+    ['Air brakes', "During the 'fanning off' test, you pump the brake pedal to lower tank pressure. What should you watch for?", ['The low-pressure warning and spring brakes coming on at the right pressures', 'The fuel gauge', 'The tachometer', 'Tire temperature'], 'The warning should come on before 60 psi and spring brakes should set by about 20 to 45 psi.'],
+    ['Combination vehicles', 'What is offtracking?', ['The rear wheels following a different, shorter path than the front wheels in a turn', 'Drifting out of your lane on the highway', 'A trailer skidding sideways', 'Losing radio signal'], 'The longer the vehicle, the more the rear wheels cut inside on turns.'],
+    ['Combination vehicles', 'If the trailer emergency (supply) line breaks, what happens?', ['The trailer emergency brakes come on', 'The trailer brakes release', 'Nothing happens', 'The tractor brakes fail'], "Losing pressure in the emergency line sets the trailer's emergency brakes."],
+    ['Combination vehicles', 'On most rigs, the service air line is what color?', ['Blue', 'Red', 'Yellow', 'Green'], 'The service line is often blue; the emergency (supply) line is often red.'],
+    ['Combination vehicles', 'What does the service line carry?', ['Air controlled by the brake pedal or trailer hand brake', 'Air that charges the trailer tanks', 'Electrical power', 'Hydraulic fluid'], 'The service line sends braking signals; the emergency line supplies air to the trailer.'],
+    ['Combination vehicles', 'Where should the shut-off valves (cut-out cocks) be closed on doubles or triples?', ['At the rear of the last trailer', 'On all trailers', 'Only on the first trailer', 'None of them'], 'Open them on every trailer except the back of the last one, or air will escape.'],
+    ['Combination vehicles', "What should you do with glad hands when they're not connected?", ['Use dummy couplers or protect them from dirt', 'Leave them hanging loose', 'Tape them together', 'Disconnect the air lines'], 'Dirt in the lines can damage the brake system.'],
+    ['Combination vehicles', 'When coupling, the locking jaws should close around:', ['The shank of the kingpin', 'The head of the kingpin', 'The landing gear', 'The glad hands'], 'Jaws closed on the head instead of the shank can let the trailer come loose.'],
+    ['Combination vehicles', 'After coupling, what should you do with the trailer landing gear?', ['Raise it fully and secure the crank handle', 'Leave it partly down for support', 'Lower it to the ground', 'Remove it'], 'Landing gear left down can catch on railroad tracks or bumps.'],
+    ['Combination vehicles', 'When uncoupling, where should you park the rig?', ['Straight, on firm and level ground', 'On a slope so the trailer rolls free', 'At an angle to the trailer', 'On soft ground'], 'Firm, level ground keeps the landing gear from sinking or the trailer from moving.'],
+    ['Combination vehicles', 'What is a converter dolly?', ['A coupling device with one or two axles and a fifth wheel', 'A type of landing gear', 'An air brake valve', 'A trailer jack'], 'Converter dollies let you connect a second or third trailer.'],
+    ['Combination vehicles', 'On trailers built after March 1998, where is the ABS malfunction lamp?', ['On the left side of the trailer, toward the rear', 'On the dashboard only', 'On the kingpin', 'On the right front corner'], "A yellow ABS lamp on the trailer's left side shows if the antilock system has a problem."],
+    ['Combination vehicles', 'What does the tractor protection valve do?', ['Keeps air in the tractor if the trailer breaks away or leaks', 'Increases trailer air pressure', 'Locks the fifth wheel', 'Turns on the trailer lights'], "It protects the tractor's air supply so the tractor can still stop."],
+    ['Combination vehicles', 'Why are low-slung trailers at risk at railroad crossings?', ['They can get stuck on raised crossings', "They can't stop quickly", "They're too tall for crossings", 'Their lights are too low'], 'A raised crossing can high-center a low trailer on the tracks.'],
+    ['Combination vehicles', 'How should you steer a combination vehicle, especially doubles?', ['Gently and smoothly', 'With quick, sharp turns', 'Only with one hand', 'By jerking the wheel to correct'], 'Quick steering can cause rearward amplification and roll the last trailer.'],
+    ['Combination vehicles', 'How do you test the trailer service brakes?', ['Move slowly and apply the trailer brakes with the hand control', 'Pull the red knob at highway speed', 'Disconnect the service line', 'Drive fast and brake hard'], 'You should feel the trailer brakes come on when you apply the hand control.'],
+    ['Combination vehicles', 'If the service and emergency air lines are crossed when coupling a trailer with spring brakes, what happens?', ["The trailer brakes won't release", 'The trailer brakes work normally', 'The tractor brakes fail', "The lights won't work"], "Supply air goes to the wrong line, so the trailer tanks don't charge and the spring brakes stay on."],
+    ['Combination vehicles', 'Before backing under a trailer, why lock the trailer brakes?', ["So the trailer doesn't move when you back under it", 'To charge the trailer tanks', 'To test the lights', "It isn't necessary"], 'Locked trailer brakes keep the trailer in place while you couple.'],
+    ['Combination vehicles', 'After coupling, what should you check about the fifth wheel locking lever?', ["It's in the locked position with the safety latch engaged", "It's in the open position", "It's removed", "It's taped down"], 'An unlocked lever can let the trailer separate.'],
+    ['Combination vehicles', 'Why should you drive slowly on curves and ramps with a loaded trailer?', ['A high center of gravity makes rollover more likely', 'To save fuel', 'To keep the air pressure up', 'Speed limits on ramps are only for cars'], 'Rollovers often happen on ramps when drivers take curves too fast.'],
+    ['Combination vehicles', 'How does a truck with an empty trailer handle compared with a loaded one?', ['It may need more stopping distance because the wheels can lock', 'It always stops shorter', 'It handles exactly the same', "It can't skid"], 'Empty trailers have less traction, so brakes can lock and wheels can skid.'],
+    ['Combination vehicles', "What is 'rearward amplification'?", ['The whip effect that makes the last trailer move more than the tractor', 'Extra horsepower from the engine', 'A louder horn on doubles', 'Better braking on the rear axle'], 'Quick steering is amplified down the train, so the last trailer is most likely to tip.'],
 ]
 
 QUIZ_HTML = r"""
@@ -1030,8 +1124,9 @@ def all_topics():
 
 
 COST_TOOL = r"""
+<nav class="toolswitch" aria-label="Trucking calculators"><a href="/tools/cost-per-mile/" aria-current="page">My costs</a><a href="/tools/load-calculator/">Check a load</a></nav>
 <h1>Cost per mile calculator</h1>
-<p class="deck">Know your break-even before you take the load. Enter your numbers; everything updates as you type and stays saved on this device.</p>
+<p class="deck">Know your break-even before you take the load. Enter your numbers once; everything updates as you type and stays saved on this device. Then use <a href="/tools/load-calculator/">Check a load</a> to see if a rate pays.</p>
 <div class="calc">
 <fieldset><legend>Miles</legend>
 <label>Miles per month <input inputmode="decimal" data-k="miles" value="10000"></label>
@@ -1129,6 +1224,13 @@ TOOL_CSS = """<style>
 .results dl{display:grid;grid-template-columns:1fr auto;gap:.3rem 1rem;margin:1rem 0 0}
 .results dt{color:var(--muted)}.results dd{margin:0;font-weight:700;text-align:right}
 .note{margin:.9rem 0 0}.fine{font-size:.85rem;color:var(--muted)}
+.toolswitch{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;padding:.3rem;margin:.2rem 0 1rem;background:var(--card);border:1px solid var(--line);border-radius:999px}
+.toolswitch a{text-align:center;padding:.55rem .5rem .45rem;border-radius:999px;font-weight:800;text-decoration:none;color:var(--ink)}
+.toolswitch a[aria-current="page"]{background:var(--sign);color:#fff}
+.costbox{border:2px solid var(--sign);border-radius:12px;padding:.8rem 1rem;margin:0 0 1rem;background:var(--card)}
+.costbox p{margin:.2rem 0}.costbox .row{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;font-weight:700}
+.costbox .acts{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
+.costbox .ghost{background:transparent;color:var(--sign);border:2px solid var(--sign)}
 @media (prefers-color-scheme:dark){.big strong{color:#5CC795}.goal strong{color:var(--ink)}}
 @media (min-width:44rem){.calc{grid-template-columns:1fr 1fr}}
 </style>"""
@@ -1137,8 +1239,10 @@ TOOL_CSS = """<style>
 ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjI2ZjJmOWI0NWYxODQ0N2U4ZTRlMDNmNjc1OTIwZGQ0IiwiaCI6Im11cm11cjY0In0="   # optional: free key from openrouteservice.org turns on truck (HGV) routing; blank uses standard road routing
 
 LOAD_TOOL = r"""
+<nav class="toolswitch" aria-label="Trucking calculators"><a href="/tools/cost-per-mile/">My costs</a><a href="/tools/load-calculator/" aria-current="page">Check a load</a></nav>
 <h1>Load profit calculator</h1>
-<p class="deck">Map the trip, get the miles, and see if the rate pays. Uses the costs you saved in the <a href="/tools/cost-per-mile/">cost per mile calculator</a>.</p>
+<p class="deck">Map the trip, get the miles, and see if the rate pays.</p>
+<div class="costbox" id="ld-costbox" aria-live="polite"></div>
 <div class="calc route">
 <fieldset><legend>Trip</legend>
 <label>Truck is now in <input id="ld-from" placeholder="City, ST (optional)" autocomplete="off"></label>
@@ -1148,7 +1252,6 @@ LOAD_TOOL = r"""
 <fieldset><legend>Load</legend>
 <label>Rate offered (total $) <input id="ld-rate" inputmode="decimal" placeholder="2400"></label>
 <label>Diesel price ($/gal) <input id="ld-fuel" inputmode="decimal"></label>
-<p class="fine" id="ld-costnote"></p>
 <button type="button" class="btn" id="ld-go">Map it and check the rate</button>
 </fieldset>
 </div>
@@ -1174,7 +1277,17 @@ var KEY='otr-cpm-v1',D={miles:10000,dead:12,fuel:5.5,mpg:6.5,truck:2200,trailer:
 try{var o=JSON.parse(localStorage.getItem(KEY)||'{}');for(var k in o){var n=parseFloat(String(o[k]).replace(/[$,%\s]/g,''));if(isFinite(n)){S[k]=n;saved=true;}}}catch(e){}
 function c(k){return S[k]!=null?S[k]:D[k];}
 var $=function(id){return document.getElementById(id);},fuelIn=$('ld-fuel');fuelIn.value=c('fuel');
-$('ld-costnote').innerHTML=saved?'Using your saved costs.':'Using sample costs. <a href="/tools/cost-per-mile/">Enter your own</a> for a true answer.';
+function summary(){var fpm=(parseFloat(fuelIn.value)||c('fuel'))/(c('mpg')||6.5),varpm=fpm+c('maint')+c('tires')+c('tolls')+c('pay'),
+fixed=c('truck')+c('trailer')+c('ins')+c('permits')+c('tech')+c('otherfixed'),tot=fixed+varpm*c('miles'),ld=c('miles')*(1-Math.min(c('dead'),95)/100),
+be=ld>0?tot/ld/(1-Math.min(c('fee'),90)/100):0;return {be:be,cpm:c('miles')?tot/c('miles'):0,fuel:parseFloat(fuelIn.value)||c('fuel')};}
+var box=$('ld-costbox'),sample=false;try{sample=localStorage.getItem('otr-load-sample')==='1';}catch(e){}
+function showBox(){var s=summary(),m=function(n){return '$'+n.toFixed(2);};
+if(!saved&&!sample){box.innerHTML='<p><strong>Set your costs first.</strong> It takes about 2 minutes, and every load you check after that uses your real numbers.</p>'
++'<div class="acts"><a class="btn" href="/tools/cost-per-mile/">Set my costs</a><button type="button" class="btn ghost" id="ld-sample">Use sample numbers</button></div>';
+$('ld-sample').addEventListener('click',function(){sample=true;try{localStorage.setItem('otr-load-sample','1');}catch(e){}showBox();});return;}
+box.innerHTML='<p>'+(saved?'Your costs':'Sample costs (not yours)')+'</p><div class="row"><span>Break-even '+m(s.be)+'/loaded mi</span><span>Cost '+m(s.cpm)+'/mi</span><span>Diesel '+m(s.fuel)+'</span></div>'
++'<div class="acts"><a href="/tools/cost-per-mile/">'+(saved?'Edit my costs':'Set my real costs')+'</a></div>';}
+showBox();fuelIn.addEventListener('input',showBox);
 try{var last=JSON.parse(localStorage.getItem('otr-load-v1')||'{}');['from','pick','drop','rate'].forEach(function(k){if(last[k])$('ld-'+k).value=last[k];});}catch(e){}
 function money(n,d){return (n<0?'-$':'$')+Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});}
 var map=null,layer=null;
@@ -1264,7 +1377,13 @@ def footer_links(pages):
     if "contact" in pages:
         links.append(("/contact/", "Contact"))
     links += ([(COMMUNITY_URL, "Driver's Lounge")] if COMMUNITY_URL else []) + ([(COMMUNITY_HOME_URL, "Member login")] if COMMUNITY_HOME_URL else []) + [("/briefing/", "Briefing"), ("/courses/", "Free courses"), ("/app/", "Get the app"), ("/privacy/", "Privacy"), ("/feed.xml", "RSS")]
-    return "&ensp;".join(f'<a href="{u}">{t}</a>' for u, t in links)
+    out = "&ensp;".join(f'<a href="{u}">{t}</a>' for u, t in links)
+    names = {"facebook": "Facebook", "instagram": "Instagram", "youtube": "YouTube", "tiktok": "TikTok", "x.com": "X", "twitter": "X", "linkedin": "LinkedIn"}
+    social = [(u, next((n for k, n in names.items() if k in u), "Social")) for u in SOCIAL_PROFILES]
+    if social:
+        out += '<br><span class="follow">Follow OTR News:&ensp;' + "&ensp;".join(
+            f'<a href="{esc(u)}" target="_blank" rel="noopener me">{t}</a>' for u, t in social) + "</span>"
+    return out
 
 
 DISCLOSURE = "Partner. OTR News may earn a commission if you sign up, at no cost to you."
@@ -1673,7 +1792,7 @@ def jobs_strip(n=5):
 
 def tools_strip():
     tiles = [("/courses/", "Free CDL courses", "12 lessons with quizzes"),
-             ("/tools/cdl-practice-test/", "CDL practice test", "49 questions with explanations"),
+             ("/tools/cdl-practice-test/", "CDL practice test", f"{len(QUIZ)} questions with explanations"),
              ("/tools/cost-per-mile/", "Cost per mile", "Find your break-even rate"),
              ("/tools/load-calculator/", "Load calculator", "Map the miles, check the rate"),
              ("/guides/", "Guides", "Money, health, repairs, jobs"),
