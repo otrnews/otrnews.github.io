@@ -28,7 +28,7 @@ NEWSLETTER_GIFT = "the free CDL Truck Driver Guide"  # what people get for signi
 COMMUNITY_URL = "https://www.mycdlcoach.com/offers/DzKSWbj5/checkout"  # The Driver's Lounge (free) signup
 COMMUNITY_HOME_URL = "https://www.mycdlcoach.com/products/communities/v2/thecdlcoachinglounge/home"  # where members go once joined
 PARENT_BRAND = "MyCDLCoach"            # shown as "OTR News is a MyCDLCoach company"
-TRAINING_URL = "https://mycdlcoach.com"  # where "Get your CDL" buttons send people
+TRAINING_URL = "https://www.mycdlcoach.com/theory-and-endorsements"  # where "Get your CDL" buttons send people
 TRAINING_PRICE = "$149"                 # shown on the training box ("" to hide)
 TRAINING_REGISTERED = False            # set True once FMCSA's Training Provider Registry shows you as active
 # Analytics and Google verification (leave "" until you have them)
@@ -972,7 +972,7 @@ def section_page(key, posts, items=()):
 
 # ---------- navigation, topics, tools ----------
 
-NAV = [("/", "Latest"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/guides/", "Guides"), ("/jobs/", "Jobs"), ("/videos/", "Videos"),
+NAV = [("/", "OTR News"), ("/industry/", "Around the industry"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/guides/", "Guides"), ("/jobs/", "Jobs"), ("/videos/", "Videos"),
        ("/tools/cost-per-mile/", "Cost per mile"), ("/courses/", "Courses"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/about/", "About")]
 
 
@@ -1183,7 +1183,7 @@ def training_box(link=True):
 <p class="kicker"><img class="mcc-shield" src="/partners/mycdlcoach-shield.webp" alt="" width="22" height="24">From {esc(PARENT_BRAND)}</p>
 <h2>Getting your CDL?</h2>
 <p>Complete your required ELDT theory training online{reg}, at your own pace, right from your phone.{price}</p>
-<a class="btn" href="{esc(TRAINING_URL)}" target="_blank" rel="noopener">Start your course</a>
+<a class="btn" href="{esc(TRAINING_URL + ('&' if '?' in TRAINING_URL else '?') + 'utm_source=otrnews&utm_medium=cta')}" target="_blank" rel="noopener">Start your course</a>
 {'<a class="more-link" href="/training/">What is ELDT?</a>' if link else ''}
 </aside>"""
 
@@ -1526,7 +1526,7 @@ def render(items, originals, sources_ok, pages):
         ours = story_html(originals[0], True) + "\n".join(story_html(i) for i in originals[1:])
         if more_ours > 0:
             ours += (f'<p style="margin:1rem 0 1.5rem"><a class="btn" href="/news/">More from OTR News ({more_ours} more stories &amp; guides)</a></p>')
-        industry_intro = '<h2 class="section-title" id="industry">Around the industry</h2>'
+        industry_intro = '<h2 class="section-title" id="industry"><a href="/industry/">Around the industry</a></h2>'
         parts = [story_html(i) for i in feed]
         parts.insert(min(8, len(parts)), partner_box(pick_partner("Industry", "home")))
         parts.insert(min(20, len(parts)), lodoshop_ad())
@@ -2045,6 +2045,35 @@ def write_videos(tpl, pages, data):
     return ["/videos/"]
 
 
+def write_industry(tpl, pages, items):
+    """Around the industry: every outside headline in the archive, with topic filters, search, and Show more."""
+    feed = [i for i in items if not i.get("original")]
+    cats = []
+    for i in feed:
+        if i["category"] not in cats:
+            cats.append(i["category"])
+    chips = '<button type="button" data-cat="" aria-pressed="true">All</button>' + "".join(
+        f'<button type="button" data-cat="{esc(c)}" aria-pressed="false">{esc(c)}</button>' for c in sorted(cats))
+    srcs = sorted({i["source"] for i in feed})
+    body = (f'<h1>Around the industry</h1><p class="deck">Headlines from {len(srcs)} trucking news outlets, updated every 30 minutes. '
+            'Stories link to the original publisher.</p>'
+            f'<div class="jobs-tools"><input type="search" id="indq" placeholder="Search headlines" aria-label="Search headlines">{chips}</div>'
+            f'<div id="indlist">{"".join(story_html(i) for i in feed)}</div>'
+            '<p class="fine" id="indnone" hidden>No headlines match. Try a different word or topic.</p>'
+            '<p><button type="button" class="btn" id="indmore" hidden>Show more headlines</button></p>'
+            + partner_box(pick_partner("Industry", "industry")) + newsletter_box() + training_box() +
+            """<script>(function(){var q=document.getElementById('indq'),c='',lim=30,bs=document.querySelectorAll('.jobs-tools button'),more=document.getElementById('indmore');
+function run(){var s=q.value.toLowerCase(),n=0;document.querySelectorAll('#indlist .story').forEach(function(a){
+var ok=(!c||a.dataset.cat===c)&&(!s||a.textContent.toLowerCase().indexOf(s)>-1);if(ok)n++;a.hidden=!ok||n>lim;});
+document.getElementById('indnone').hidden=n>0;more.hidden=n<=lim;more.textContent='Show more headlines ('+(n-lim)+' more)';}
+q.addEventListener('input',function(){lim=30;run();});more.addEventListener('click',function(){lim+=30;run();});
+bs.forEach(function(b){b.addEventListener('click',function(){c=b.dataset.cat;lim=30;bs.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});run();});});run();})();</script>""")
+    out = SITE / "industry"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "index.html").write_text(shell(tpl, pages, title="Around the trucking industry", path="/industry/", body=body, extra_css=JOBS_CSS,
+        description="The latest trucking headlines from across the industry, updated every 30 minutes."))
+
+
 def main():
     feeds = read_feeds()
     fresh, ok = [], 0
@@ -2186,9 +2215,10 @@ def main():
         (SITE / "cards" / name).write_bytes(base64.b64decode(data))
 
     write_app_files(tpl, pages)
+    write_industry(tpl, pages, items)
     vdata = update_videos()
     write_videos(tpl, pages, vdata)
-    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + ["/videos/", "/news/"]
+    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + ["/videos/", "/news/", "/industry/"]
     (SITE / "index.html").write_text(render(items, posts, ok, pages))
     everything = sorted(posts + items, key=lambda i: i["published"], reverse=True)
     (SITE / "feed.xml").write_text(render_rss(everything))
