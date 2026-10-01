@@ -930,7 +930,7 @@ def section_page(key, posts, items=()):
 
 # ---------- navigation, topics, tools ----------
 
-NAV = [("/", "Latest"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/guides/", "Guides"), ("/jobs/", "Jobs"),
+NAV = [("/", "Latest"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/guides/", "Guides"), ("/jobs/", "Jobs"), ("/videos/", "Videos"),
        ("/tools/cost-per-mile/", "Cost per mile"), ("/courses/", "Courses"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/about/", "About")]
 
 
@@ -1413,6 +1413,7 @@ def tools_strip():
              ("/guides/", "Guides", "Money, health, repairs, jobs"),
              ("/toolkit/", "Driver toolkit", "Services we recommend"),
              ("/jobs/", "Job board", "New CDL jobs every 6 hours"),
+             ("/videos/", "Videos", "Trucking news and CDL tips"),
              ("/app/", "Get the app", "OTR News on your home screen")]
     cells = "".join(f'<a class="tile" href="{u}"><strong>{esc(t)}</strong><span>{esc(d)}</span></a>' for u, t, d in tiles)
     return f'<nav class="tiles" aria-label="Free tools">{cells}</nav>'
@@ -1446,7 +1447,7 @@ def render(items, originals, sources_ok, pages):
                .replace("{{SOURCE_COUNT}}", str(sources_ok))
                .replace("{{CHIPS}}", chips)
                .replace("{{ORIGINALS}}", ours)
-               .replace("{{NEWSLETTER}}", tools_strip() + newsletter_box() + question_of_the_day() + jobs_strip() + community_box() + training_box())
+               .replace("{{NEWSLETTER}}", tools_strip() + newsletter_box() + question_of_the_day() + jobs_strip() + videos_strip() + community_box() + training_box())
                .replace("{{PARENT}}", parent_line())
                .replace("{{INDUSTRY_TITLE}}", industry_intro)
                .replace("{{STORIES}}", feed_html)
@@ -1794,6 +1795,158 @@ def write_briefings(tpl, pages):
     return urls
 
 
+VIDEOS_TXT = ROOT / "videos.txt"
+VIDEOS_FILE = ROOT / "data" / "videos.json"
+VIDEO_OWN = "MyCDLCoach"          # your own channel gets its own section at the top
+VIDEO_MAX_AGE_DAYS = 60
+YT_NS = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015",
+         "media": "http://search.yahoo.com/mrss/"}
+
+
+def read_video_channels():
+    out = []
+    if VIDEOS_TXT.exists():
+        for line in VIDEOS_TXT.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "|" in line:
+                name, ref = [x.strip() for x in line.split("|", 1)]
+                out.append((name, ref))
+    return out
+
+
+def yt_get(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Accept-Language": "en-US",
+                                               "Cookie": "CONSENT=YES+1; SOCS=CAI"})
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return r.read().decode("utf-8", "replace")
+
+
+def update_videos():
+    """Refresh data/videos.json from each channel's public YouTube feed. Keeps the old list on failure."""
+    try:
+        data = json.loads(VIDEOS_FILE.read_text())
+    except Exception:
+        data = {"ids": {}, "videos": []}
+    channels = read_video_channels()
+    if not channels:
+        return data
+    try:  # refresh at most every 2 hours
+        if (datetime.now(timezone.utc) - datetime.fromisoformat(data["updated"])).total_seconds() < 2 * 3600 - 300:
+            return data
+    except Exception:
+        pass
+    ids, videos, ok = data.get("ids", {}), [], 0
+    cutoff = datetime.now(timezone.utc) - timedelta(days=VIDEO_MAX_AGE_DAYS)
+    for name, ref in channels:
+        try:
+            cid = ref if ref.startswith("UC") else ids.get(ref)
+            if not cid:
+                page = yt_get("https://www.youtube.com/" + ref.lstrip("/"))
+                m = (re.search(r'<link rel="canonical" href="https://www\.youtube\.com/channel/(UC[\w-]{22})"', page)
+                     or re.search(r'"(?:externalId|channelId)":"(UC[\w-]{22})"', page))
+                if not m:
+                    raise ValueError("channel not found")
+                cid = ids[ref] = m.group(1)
+            root = ET.fromstring(yt_get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}"))
+            n = 0
+            for e in root.findall("a:entry", YT_NS):
+                vid = e.findtext("yt:videoId", "", YT_NS)
+                pub = e.findtext("a:published", "", YT_NS)
+                link = (e.find("a:link", YT_NS).get("href") if e.find("a:link", YT_NS) is not None else "")
+                if not vid or "/shorts/" in link:
+                    continue
+                try:
+                    if datetime.fromisoformat(pub.replace("Z", "+00:00")) < cutoff:
+                        continue
+                except Exception:
+                    pass
+                desc = e.findtext("media:group/media:description", "", YT_NS) or ""
+                videos.append({"id": vid, "title": e.findtext("a:title", "", YT_NS), "channel": name,
+                               "published": pub, "summary": re.sub(r"\s+", " ", desc)[:220]})
+                n += 1
+                if n >= 8:
+                    break
+            ok += 1
+            print(f"  ok   video {name}: {n}")
+        except Exception as ex:
+            print(f"  skip video {name} ({ref}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
+    if ok:
+        videos.sort(key=lambda v: v.get("published", ""), reverse=True)
+        data = {"ids": ids, "videos": videos, "updated": datetime.now(timezone.utc).isoformat()}
+        try:
+            VIDEOS_FILE.parent.mkdir(exist_ok=True)
+            VIDEOS_FILE.write_text(json.dumps(data, indent=1))
+        except Exception:
+            pass
+    return data
+
+
+VIDEO_CSS = """<style>
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(16rem,1fr));gap:1rem;margin:1rem 0 1.5rem}
+.vcard{display:flex;flex-direction:column;gap:.35rem}
+.vplay{position:relative;display:block;width:100%;aspect-ratio:16/9;border:0;padding:0;border-radius:10px;overflow:hidden;cursor:pointer;background:#111}
+.vplay img{width:100%;height:100%;object-fit:cover;display:block}
+.vplay span{position:absolute;inset:0;margin:auto;width:3.6rem;height:2.6rem;border-radius:12px;background:rgba(200,0,0,.92);display:grid;place-items:center}
+.vplay span::after{content:"";border-style:solid;border-width:.6rem 0 .6rem 1rem;border-color:transparent transparent transparent #fff;margin-left:.2rem}
+.vplay iframe{width:100%;height:100%;border:0}
+.vcard h3{margin:0;font-size:1rem;line-height:1.3}
+.vcard .meta{margin:0}
+.vchips{display:flex;flex-wrap:wrap;gap:.4rem;margin:.75rem 0}
+.vchips button{font:inherit;font-size:.9rem;padding:.35rem .75rem;border:1px solid #cfd6d2;border-radius:999px;background:transparent;color:inherit;cursor:pointer}
+.vchips button[aria-pressed="true"]{background:#00603C;border-color:#00603C;color:#fff}
+</style>"""
+
+VIDEO_JS = """<script>document.addEventListener('click',function(e){var b=e.target.closest('.vplay');if(!b||b.dataset.on)return;b.dataset.on=1;
+b.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+b.dataset.id+'?autoplay=1&rel=0" title="'+(b.getAttribute('aria-label')||'Video')+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';});
+(function(){var bs=document.querySelectorAll('.vchips button');bs.forEach(function(b){b.addEventListener('click',function(){var c=b.dataset.ch;
+bs.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});document.querySelectorAll('#allvideos .vcard').forEach(function(v){v.hidden=!!c&&v.dataset.ch!==c;});});});})();</script>"""
+
+
+def video_card(v):
+    return (f'<div class="vcard" data-ch="{esc(v["channel"])}"><button type="button" class="vplay" data-id="{esc(v["id"])}" aria-label="Play: {esc(v["title"])}">'
+            f'<img src="https://i.ytimg.com/vi/{esc(v["id"])}/hqdefault.jpg" alt="" loading="lazy"><span></span></button>'
+            f'<h3>{esc(v["title"])}</h3><p class="meta">{esc(v["channel"])} &middot; {esc(posted_label(v.get("published", "")).replace("Posted ", ""))}</p></div>')
+
+
+def videos_strip(data=None, n=3):
+    if data is None:
+        try:
+            data = json.loads(VIDEOS_FILE.read_text())
+        except Exception:
+            data = {}
+    vids = data.get("videos") or []
+    if not vids:
+        return ""
+    return (f'<section class="tool-card"><h2><a href="/videos/">Latest trucking videos</a></h2><div class="vgrid">'
+            + "".join(video_card(v) for v in vids[:n]) + '</div><a class="btn" href="/videos/">Watch more</a></section>' + VIDEO_CSS + VIDEO_JS)
+
+
+def write_videos(tpl, pages, data):
+    vids = data.get("videos") or []
+    out = SITE / "videos"
+    out.mkdir(parents=True, exist_ok=True)
+    own = [v for v in vids if v["channel"] == VIDEO_OWN]
+    chans = []
+    for v in vids:
+        if v["channel"] not in chans:
+            chans.append(v["channel"])
+    chips = '<button type="button" data-ch="" aria-pressed="true">All</button>' + "".join(
+        f'<button type="button" data-ch="{esc(c)}" aria-pressed="false">{esc(c)}</button>' for c in chans)
+    body = ('<h1>Trucking videos</h1><p class="deck">The latest from trucking\'s video channels, plus CDL tips from MyCDLCoach. '
+            'Videos play right here with YouTube\'s player.</p>')
+    if own:
+        body += f'<h2 class="section-title">From {esc(VIDEO_OWN)}</h2><div class="vgrid">' + "".join(video_card(v) for v in own[:4]) + '</div>'
+    if vids:
+        body += (f'<h2 class="section-title">Around the industry</h2><div class="vchips">{chips}</div>'
+                 f'<div class="vgrid" id="allvideos">' + "".join(video_card(v) for v in vids[:60]) + '</div>')
+    else:
+        body += '<p class="empty">New videos load with the next update. Check back soon.</p>'
+    body += newsletter_box() + training_box() + VIDEO_JS
+    (out / "index.html").write_text(shell(tpl, pages, title="Trucking videos", path="/videos/", body=body, extra_css=VIDEO_CSS,
+        description="The latest trucking news videos and CDL tips, in one place."))
+    return ["/videos/"]
+
+
 def main():
     feeds = read_feeds()
     fresh, ok = [], 0
@@ -1929,7 +2082,9 @@ def main():
         (SITE / "cards" / name).write_bytes(base64.b64decode(data))
 
     write_app_files(tpl, pages)
-    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages)
+    vdata = update_videos()
+    write_videos(tpl, pages, vdata)
+    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + ["/videos/"]
     (SITE / "index.html").write_text(render(items, posts, ok, pages))
     everything = sorted(posts + items, key=lambda i: i["published"], reverse=True)
     (SITE / "feed.xml").write_text(render_rss(everything))

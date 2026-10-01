@@ -1,0 +1,10 @@
+# YouTube channels for otrnews.com/videos/
+# One per line:  Name | @handle   (or the channel ID that starts with UC)
+# Videos come from each channel's public YouTube feed and play with YouTube's own player.
+# A channel that can't be found is skipped and listed in the Actions log.
+MyCDLCoach | @MyCDLCoach
+FreightWaves | @FreightWaves
+CDLLife | @CDLLife
+Transport Topics | @TransportTopics
+Overdrive | @OverdriveOnline
+OOIDA | @OOIDA
