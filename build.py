@@ -23,6 +23,7 @@ SITE_NAME = "OTR News"
 TAGLINE = "Trucking news for owner-operators, small fleets, and drivers."
 CONTACT_EMAIL = "news@otrnews.com"   # turns on the Contact page ("" to hide)
 NEWSLETTER_URL = "https://www.mycdlcoach.com/offers/uLgiTonu/checkout"  # signup link (free CDL Truck Driver Guide on Kajabi)
+NEWSLETTER_EMBED = "https://www.mycdlcoach.com/forms/2149158476/embed.js"  # Kajabi form embed (inline); "" to use the button instead
 NEWSLETTER_GIFT = "the free CDL Truck Driver Guide"  # what people get for signing up ("" for none)
 COMMUNITY_URL = "https://www.mycdlcoach.com/offers/DzKSWbj5/checkout"  # The Driver's Lounge (free) signup
 COMMUNITY_HOME_URL = "https://www.mycdlcoach.com/products/communities/v2/thecdlcoachinglounge/home"  # where members go once joined
@@ -1181,11 +1182,26 @@ Both must come from a provider listed on FMCSA's **Training Provider Registry**.
 """ 
 
 def newsletter_box():
-    if not NEWSLETTER_URL:
+    if not (NEWSLETTER_URL or NEWSLETTER_EMBED):
         return ""
-    return f"""<aside class="signup">
-<h2>{"Get " + esc(NEWSLETTER_GIFT) if NEWSLETTER_GIFT else "Get the OTR News briefing"}</h2>
-<p>{"Sign up free and we'll send it right away, plus" if NEWSLETTER_GIFT else "Get"} the weekly OTR News briefing: the trucking news that matters, new driving jobs, and our latest guides.</p>
+    title = f"Get {esc(NEWSLETTER_GIFT)}" if NEWSLETTER_GIFT else "Get the OTR News briefing"
+    lead = ("Sign up free and we'll send it right away, plus the weekly OTR News briefing: the trucking news that matters, "
+            "new driving jobs, and our latest guides.") if NEWSLETTER_GIFT else \
+        "The weekly OTR News briefing: the trucking news that matters, new driving jobs, and our latest guides. Free."
+    if NEWSLETTER_EMBED:
+        backup = (f'<p class="fine" style="margin-top:.5rem">Form not showing? <a href="{esc(NEWSLETTER_URL)}" target="_blank" rel="noopener">Sign up here</a>.</p>'
+                  if NEWSLETTER_URL else "")
+        return f"""<aside class="signup" id="signup">
+<h2>{title}</h2>
+<p>{lead}</p>
+<div class="kajabi-form" style="background:#fff;color:#111;border-radius:12px;padding:.25rem;max-width:34rem">
+<script src="{esc(NEWSLETTER_EMBED)}"></script>
+</div>
+{backup}
+</aside>"""
+    return f"""<aside class="signup" id="signup">
+<h2>{title}</h2>
+<p>{lead}</p>
 <a class="btn" href="{esc(NEWSLETTER_URL)}" target="_blank" rel="noopener">{"Get it free" if NEWSLETTER_GIFT else "Sign up free"}</a>
 </aside>"""
 
