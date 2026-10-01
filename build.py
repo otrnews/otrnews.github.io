@@ -2252,6 +2252,10 @@ def make_social_cards(posts):
             d.text((60, H - 92), "Full story: link in bio  \u2022  otrnews.com", font=ff, fill="white")
             path = out_dir / f'{p["slug"]}.jpg'
             im.save(path, "JPEG", quality=86, optimize=True)
+            # same image next to the article, so Zapier can use: story link + "social.jpg"
+            art = SITE / "news" / p["slug"]
+            art.mkdir(parents=True, exist_ok=True)
+            im.save(art / "social.jpg", "JPEG", quality=86, optimize=True)
             made[p["slug"]] = (f'{SITE_URL}/social/{p["slug"]}.jpg', path.stat().st_size)
         except Exception as e:
             print(f"  social card skipped for {p.get('slug')}: {e}", file=sys.stderr)
