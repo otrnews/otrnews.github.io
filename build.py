@@ -24,7 +24,8 @@ TAGLINE = "Trucking news for owner-operators, small fleets, and drivers."
 CONTACT_EMAIL = "news@otrnews.com"   # turns on the Contact page ("" to hide)
 NEWSLETTER_URL = "https://www.mycdlcoach.com/offers/uLgiTonu/checkout"  # signup link (free CDL Truck Driver Guide on Kajabi)
 NEWSLETTER_GIFT = "the free CDL Truck Driver Guide"  # what people get for signing up ("" for none)
-COMMUNITY_URL = "https://www.mycdlcoach.com/offers/DzKSWbj5/checkout"  # The Driver's Lounge (free)
+COMMUNITY_URL = "https://www.mycdlcoach.com/offers/DzKSWbj5/checkout"  # The Driver's Lounge (free) signup
+COMMUNITY_HOME_URL = "https://www.mycdlcoach.com/products/communities/v2/thecdlcoachinglounge/home"  # where members go once joined
 PARENT_BRAND = "MyCDLCoach"            # shown as "OTR News is a MyCDLCoach company"
 TRAINING_URL = "https://mycdlcoach.com"  # where "Get your CDL" buttons send people
 TRAINING_PRICE = "$149"                 # shown on the training box ("" to hide)
@@ -363,7 +364,7 @@ We use AI tools to help research and draft articles. An editor reviews every sto
 
 ## How we make money
 
-OTR News is free to read. We earn money from our parent company's training courses and from partner referral links, which are always labeled "Partner." Partners never pay for news coverage.
+OTR News is free to read. We earn money from our parent company's training courses, ebooks in our store, partner referral links, which are always labeled "Partner," and ads, which are always labeled "Ad." Partners and advertisers never pay for news coverage.
 
 ## Around the industry
 
@@ -1061,7 +1062,7 @@ def footer_links(pages):
     links = [("/about/", "About")]
     if "contact" in pages:
         links.append(("/contact/", "Contact"))
-    links += ([(COMMUNITY_URL, "Driver's Lounge")] if COMMUNITY_URL else []) + [("/briefing/", "Briefing"), ("/courses/", "Free courses"), ("/app/", "Get the app"), ("/privacy/", "Privacy"), ("/feed.xml", "RSS")]
+    links += ([(COMMUNITY_URL, "Driver's Lounge")] if COMMUNITY_URL else []) + ([(COMMUNITY_HOME_URL, "Member login")] if COMMUNITY_HOME_URL else []) + [("/briefing/", "Briefing"), ("/courses/", "Free courses"), ("/app/", "Get the app"), ("/privacy/", "Privacy"), ("/feed.xml", "RSS")]
     return "&ensp;".join(f'<a href="{u}">{t}</a>' for u, t in links)
 
 
@@ -1212,6 +1213,7 @@ def community_box():
 <h2>Join the Driver's Lounge</h2>
 <p>A free community for CDL students, drivers, and owner-operators. Ask questions, share what's working, join weekly challenges and live meetups, and get our free checklists. Free to join on the {esc(PARENT_BRAND)} app.</p>
 <a class="btn" href="{esc(COMMUNITY_URL)}" target="_blank" rel="noopener">Join free</a>
+{f'<a class="more-link" href="{esc(COMMUNITY_HOME_URL)}" target="_blank" rel="noopener">Already a member? Open the Lounge</a>' if COMMUNITY_HOME_URL else ''}
 </aside>"""
 
 
@@ -1674,13 +1676,13 @@ EBOOKS = [e for e in EBOOKS if e.get("title") and e.get("url") and e.get("slug")
 STORE_CSS = """<style>
 .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(10.5rem,1fr));gap:1rem;margin:1.25rem 0}
 .book{display:flex;flex-direction:column;gap:.4rem;text-decoration:none;color:inherit}
-.book img,.book .nocover{width:100%;aspect-ratio:3/4;object-fit:contain;background:#eef1ef;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.book .nocover{display:grid;place-items:center;text-align:center;padding:1rem;background:#00603C;color:#fff;font-weight:800}
+.book img,.book .nocover{width:100%;height:auto;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.book .nocover{aspect-ratio:4/3;display:grid;place-items:center;text-align:center;padding:1rem;background:#00603C;color:#fff;font-weight:800}
 .book strong{font-size:1rem;line-height:1.25}
 .book .price{font-weight:800;color:#00603C}
 .book-hero{display:grid;grid-template-columns:minmax(8rem,12rem) 1fr;gap:1.25rem;align-items:start;margin:1rem 0}
-.book-hero img,.book-hero .nocover{width:100%;aspect-ratio:3/4;object-fit:contain;background:#eef1ef;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
-.book-hero .nocover{display:grid;place-items:center;text-align:center;padding:1rem;background:#00603C;color:#fff;font-weight:800}
+.book-hero img,.book-hero .nocover{width:100%;height:auto;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.book-hero .nocover{aspect-ratio:4/3;display:grid;place-items:center;text-align:center;padding:1rem;background:#00603C;color:#fff;font-weight:800}
 .book-hero .price{font-size:1.6rem;font-weight:900;margin:.25rem 0 .75rem}
 @media (max-width:34rem){.book-hero{grid-template-columns:1fr}.book-hero img,.book-hero .nocover{max-width:12rem}}
 @media (prefers-color-scheme: dark){.book .price{color:#7fd6a8}}
@@ -1689,7 +1691,8 @@ STORE_CSS = """<style>
 
 def cover_html(e):
     if e.get("cover"):
-        return f'<img src="{esc(e["cover"])}" alt="Cover of {esc(e["title"])}" loading="lazy">'
+        return (f'<img src="{esc(e["cover"])}" alt="Cover of {esc(e["title"])}" loading="lazy" '
+                f'onerror="this.outerHTML=\'<div class=&quot;nocover&quot;>{esc(e["title"]).replace(chr(39), "")}</div>\'">')
     return f'<div class="nocover">{esc(e["title"])}</div>'
 
 
