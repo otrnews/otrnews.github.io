@@ -8,6 +8,7 @@ Standard library only.
 import base64
 import html
 import json
+import os
 import re
 import sys
 import urllib.parse
@@ -35,6 +36,9 @@ TRAINING_REGISTERED = False            # set True once FMCSA's Training Provider
 GOOGLE_ANALYTICS_ID = "G-V4J6Q8XTNV"      # e.g. "G-ABC123XYZ" from Google Analytics
 PLAUSIBLE_DOMAIN = ""         # e.g. "otrnews.com" if you use Plausible instead
 GOOGLE_SITE_VERIFICATION = "" # the content="..." code from Google Search Console's HTML tag option
+BING_SITE_VERIFICATION = ""   # the content="..." code from Bing Webmaster Tools' meta tag option
+INDEXNOW_KEY = "0dbfb7d2ab66d32e17ef4a7af9a98a34"  # lets Bing/MSN/Yandex know about new stories within minutes (leave as is)
+SOCIAL_PROFILES = []           # your public pages, e.g. ["https://www.facebook.com/otrnews", "https://www.instagram.com/otrnews"]
 LODOSHOP_URL = "https://lodoshop.com"             # paste your LodoShop store link here (e.g. "https://yourstore.com") to show it as a partner
 
 # Partner (referral) links. The site picks a matching partner for each page by topic.
@@ -738,8 +742,16 @@ def head_extras():
            '<meta name="apple-mobile-web-app-status-bar-style" content="default">',
            '<link rel="apple-touch-icon" sizes="180x180" href="/icon.png">',
            "<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>"]
+    out.append('<meta name="robots" content="max-image-preview:large, max-snippet:-1, max-video-preview:-1">')
+    org = {"@context": "https://schema.org", "@type": "NewsMediaOrganization", "name": SITE_NAME, "url": SITE_URL,
+           "logo": {"@type": "ImageObject", "url": f"{SITE_URL}/icon.png"}, "email": CONTACT_EMAIL or None,
+           "publishingPrinciples": f"{SITE_URL}/about/", "sameAs": SOCIAL_PROFILES or None,
+           "parentOrganization": {"@type": "Organization", "name": PARENT_BRAND} if PARENT_BRAND else None}
+    out.append('<script type="application/ld+json">' + json.dumps({k: v for k, v in org.items() if v}) + '</script>')
     if GOOGLE_SITE_VERIFICATION:
         out.append(f'<meta name="google-site-verification" content="{esc(GOOGLE_SITE_VERIFICATION)}">')
+    if BING_SITE_VERIFICATION:
+        out.append(f'<meta name="msvalidate.01" content="{esc(BING_SITE_VERIFICATION)}">')
     if PLAUSIBLE_DOMAIN:
         out.append(f'<script defer data-domain="{esc(PLAUSIBLE_DOMAIN)}" src="https://plausible.io/js/script.js"></script>')
     elif GOOGLE_ANALYTICS_ID:
@@ -974,7 +986,7 @@ def section_page(key, posts, items=()):
 # ---------- navigation, topics, tools ----------
 
 NAV = [("/", "OTR News"), ("/industry/", "Around the industry"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/guides/", "Guides"), ("/jobs/", "Jobs"),
-       ("/tools/cost-per-mile/", "Cost per mile"), ("/courses/", "Courses"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/about/", "About")]
+       ("/tools/cost-per-mile/", "Cost per mile"), ("/courses/", "Courses"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/traffic/", "Road conditions"), ("/about/", "About")]
 
 
 def has_videos():
@@ -1323,7 +1335,7 @@ PAGE_CSS = """<style>
 
 
 def shell(tpl, pages, *, title, description, path, body, og_type="website", ld=None, extra_css="", og_image="/og.png"):
-    ld_html = f'<script type="application/ld+json">{json.dumps(ld)}</script>' if ld else ""
+    ld_html = "".join(f'<script type="application/ld+json">{json.dumps(x)}</script>' for x in (ld if isinstance(ld, list) else [ld] if ld else []))
     return f"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8">
@@ -1434,16 +1446,27 @@ def render_article(p, posts, tpl, pages):
 {newsletter_box()}
 {more}
 <a class="back" href="/">All trucking news</a>"""
-    ld = {"@context": "https://schema.org", "@type": "NewsArticle", "headline": p["title"],
-          "datePublished": p["published"], "dateModified": p["published"],
-          "author": {"@type": "Organization", "name": p["author"]},
+    images = [SITE_URL + p["image"] if p.get("image", "").startswith("/") else f"{SITE_URL}/cards/card-{topic_slug(p['category'])}.png"]
+    images.append(f"{SITE_URL}/social/{p['slug']}.jpg")
+    crumbs = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": SITE_URL + "/"},
+        {"@type": "ListItem", "position": 2, "name": p["category"], "item": f"{SITE_URL}/topics/{topic_slug(p['category'])}/"},
+        {"@type": "ListItem", "position": 3, "name": p["title"], "item": url}]}
+    article_meta = (f'<meta property="article:published_time" content="{esc(p["published"])}">'
+                    f'<meta property="article:modified_time" content="{esc(p.get("updated") or p["published"])}">'
+                    f'<meta property="article:section" content="{esc(p["category"])}">'
+                    f'<meta name="author" content="{esc(p["author"])}">')
+    ld = {"@context": "https://schema.org", "@type": "NewsArticle", "headline": p["title"][:110],
+          "datePublished": p["published"], "dateModified": p.get("updated") or p["published"],
+          "author": {"@type": "Organization", "name": p["author"], "url": f"{SITE_URL}/about/"},
+          "inLanguage": "en-US", "isAccessibleForFree": True, "wordCount": len(re.sub("<[^>]+>", " ", p["body"]).split()),
           "publisher": {"@type": "Organization", "name": SITE_NAME,
                         "logo": {"@type": "ImageObject", "url": f"{SITE_URL}/icon.png"}},
-          "image": [SITE_URL + p["image"] if p.get("image", "").startswith("/") else f"{SITE_URL}/cards/card-{topic_slug(p['category'])}.png"],
+          "image": images,
           "articleSection": p["category"], "description": p["summary"], "mainEntityOfPage": url}
     og = p["image"] if p.get("image", "").startswith("/") else f"/cards/card-{topic_slug(p['category'])}.png"
     return shell(tpl, pages, og_image=og, title=p["title"], description=p["summary"], path=p["link"],
-                 body=body, og_type="article", ld=ld)
+                 body=body, og_type="article", ld=[ld, crumbs], extra_css=article_meta)
 
 
 def render_page(name, page, tpl, pages):
@@ -1461,6 +1484,8 @@ def fmt_date(iso):
 def thumb_src(i, lead=False):
     if i.get("image"):
         return i["image"]
+    if i.get("original") and i.get("slug") and not lead:
+        return f"/social/{i['slug']}.jpg"
     return f"/cards/{'card' if lead else 'thumb'}-{topic_slug(i['category'])}.png"
 
 
@@ -1474,7 +1499,8 @@ def story_html(i, lead=False):
     if orig:
         alt = esc(i.get("image_alt") or "")
         img = (f'<a class="thumb" href="{esc(i["link"])}" tabindex="-1" aria-hidden="true">'
-               f'<img src="{esc(thumb_src(i, lead))}" alt="{alt}" loading="{"eager" if lead else "lazy"}"></a>')
+               f'<img src="{esc(thumb_src(i, lead))}" alt="{alt}" loading="{"eager" if lead else "lazy"}" '
+               f'onerror="this.onerror=null;this.src=\'/cards/thumb-{topic_slug(i["category"])}.png\'"></a>')
     return f"""<article class="{cls}" data-cat="{esc(i["category"])}">
   {img}<div class="story-text">
   <p class="meta"><a class="cat" href="/topics/{topic_slug(i["category"])}/">{esc(i["category"])}</a><span class="src">{esc(i["source"])}</span><time datetime="{esc(i["published"])}">{fmt_date(i["published"])}</time></p>
@@ -2071,6 +2097,112 @@ def write_videos(tpl, pages, data):
     return ["/videos/"]
 
 
+# ---------- road conditions page ----------
+
+TRAFFIC_CSS = """<style>
+.mapbox{position:relative;border:2px solid #00603C;border-radius:14px;overflow:hidden;background:#e9efec;margin:.75rem 0 .4rem}
+.mapbox iframe,.mapbox #radar{display:block;width:100%;height:min(70vh,460px);border:0}
+.maptools{display:flex;flex-wrap:wrap;gap:.5rem;margin:.6rem 0}
+.maptools button{font:inherit;font-weight:700;padding:.45rem .9rem;border-radius:999px;border:2px solid #00603C;background:#fff;color:#00603C;cursor:pointer}
+.maptools button[aria-pressed="true"]{background:#00603C;color:#fff}
+.radar-time{font-weight:700}
+</style>"""
+
+TRAFFIC_REGIONS = [("Whole US", 39.5, -98.35, 4), ("Northeast", 41.2, -75.5, 6), ("Southeast", 33.5, -84.0, 6),
+                   ("Midwest", 41.5, -89.0, 6), ("Texas", 31.0, -98.5, 6), ("West", 37.0, -117.0, 5)]
+
+
+def write_traffic(tpl, pages, items, posts):
+    """Live traffic (Waze), animated weather radar (RainViewer), state 511 links, and enforcement news."""
+    btns = "".join(f'<button type="button" data-lat="{la}" data-lon="{lo}" data-z="{z}" aria-pressed="{"true" if n == 0 else "false"}">{esc(t)}</button>'
+                   for n, (t, la, lo, z) in enumerate(TRAFFIC_REGIONS))
+    news = [p for p in posts if p["category"] == "Enforcement & safety"][:3] + \
+           [i for i in items if i.get("category") == "Enforcement & safety" and not i.get("original")][:8]
+    parking = partner_named("Truck Parking Club")
+    body = f"""<h1>Road conditions</h1>
+<p class="deck">Live traffic, weather radar, and state road reports for the routes you drive. Check before you roll, not while you drive.</p>
+<h2 class="section-title">Live traffic</h2>
+<p class="fine">Crashes, slowdowns, closures, and police reports from Waze drivers. Pick a region or drag the map.</p>
+<div class="maptools" id="trafficbtns">{btns}</div>
+<div class="mapbox"><iframe id="waze" title="Live traffic map" loading="lazy" allowfullscreen
+ src="https://embed.waze.com/iframe?zoom=4&amp;lat=39.5&amp;lon=-98.35&amp;ct=livemap"></iframe></div>
+<p class="fine">Map won't load? <a href="https://www.waze.com/live-map" target="_blank" rel="noopener">Open the Waze live map</a>.</p>
+<h2 class="section-title">Weather radar</h2>
+<p class="fine">Rain and snow over the last two hours. <span class="radar-time" id="radartime"></span></p>
+<div class="mapbox"><div id="radar" role="img" aria-label="Animated weather radar map"></div></div>
+<p class="fine">Radar by <a href="https://www.rainviewer.com" target="_blank" rel="noopener">RainViewer</a>. Severe weather alerts: <a href="https://www.weather.gov" target="_blank" rel="noopener">National Weather Service</a>.</p>
+<h2 class="section-title">State road reports (511)</h2>
+<div class="body"><p>Chain laws, closures, construction, and weigh station status come from each state. The Federal Highway Administration keeps
+<a href="https://www.fhwa.dot.gov/trafficinfo/" target="_blank" rel="noopener">every state's 511 road report in one list</a>. On the road, you can also dial <strong>511</strong> in most states.</p></div>
+{partner_box(parking) if parking else ""}
+{('<h2 class="section-title">Enforcement and safety news</h2>' + "".join(story_html(i) for i in news)) if news else ""}
+{newsletter_box()}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>(function(){{
+var f=document.getElementById('waze'),bs=document.querySelectorAll('#trafficbtns button');
+bs.forEach(function(b){{b.addEventListener('click',function(){{bs.forEach(function(x){{x.setAttribute('aria-pressed',x===b?'true':'false');}});
+f.src='https://embed.waze.com/iframe?zoom='+b.dataset.z+'&lat='+b.dataset.lat+'&lon='+b.dataset.lon+'&ct=livemap';}});}});
+if(!window.L)return;
+var m=L.map('radar',{{scrollWheelZoom:false}}).setView([39.5,-98.35],4);
+L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png',{{maxZoom:10,attribution:'&copy; OpenStreetMap contributors'}}).addTo(m);
+fetch('https://api.rainviewer.com/public/weather-maps.json').then(function(r){{return r.json();}}).then(function(d){{
+var fr=(d.radar&&d.radar.past)||[];if(!fr.length)return;var ls=fr.map(function(x){{return L.tileLayer(d.host+x.path+'/256/{{z}}/{{x}}/{{y}}/4/1_1.png',{{opacity:0,zIndex:5,maxNativeZoom:7,maxZoom:10}}).addTo(m);}});
+var i=fr.length-1,t=document.getElementById('radartime'),still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function show(n){{ls.forEach(function(l,k){{l.setOpacity(k===n?.7:0);}});t.textContent='Showing '+new Date(fr[n].time*1000).toLocaleTimeString([],{{hour:'numeric',minute:'2-digit'}});}}
+show(i);if(!still)setInterval(function(){{i=(i+1)%fr.length;show(i);}},700);}}).catch(function(){{}});
+}})();</script>"""
+    out = SITE / "traffic"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "index.html").write_text(shell(tpl, pages, title="Road conditions: live traffic and weather radar for truckers",
+        description="Live traffic, weather radar, and links to every state's 511 road report, for truck drivers planning their route.",
+        path="/traffic/", body=body, extra_css=TRAFFIC_CSS))
+    return ["/traffic/"]
+
+
+# ---------- search engines: Google News sitemap and IndexNow ----------
+
+def write_news_sitemap(posts):
+    """Google News reads stories from the last 2 days from this file."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=2)
+    rows = []
+    for p in posts:
+        d = datetime.fromisoformat(p["published"])
+        if (d if d.tzinfo else d.replace(tzinfo=timezone.utc)) < cutoff:
+            continue
+        rows.append(f'<url><loc>{SITE_URL}{p["link"]}</loc><news:news><news:publication><news:name>{esc(SITE_NAME)}</news:name>'
+                    f'<news:language>en</news:language></news:publication><news:publication_date>{esc(p["published"])}</news:publication_date>'
+                    f'<news:title>{esc(p["title"])}</news:title></news:news></url>')
+    (SITE / "news-sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+                                           'xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">' + "".join(rows) + "</urlset>")
+
+
+def ping_indexnow(posts):
+    """Tells Bing (and MSN, DuckDuckGo, Yandex) about stories published in the last hour. Only runs on GitHub."""
+    if not INDEXNOW_KEY:
+        return
+    (SITE / f"{INDEXNOW_KEY}.txt").write_text(INDEXNOW_KEY)
+    if not os.environ.get("GITHUB_ACTIONS"):
+        return
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=65)
+    fresh = []
+    for p in posts:
+        d = datetime.fromisoformat(p["published"])
+        if (d if d.tzinfo else d.replace(tzinfo=timezone.utc)) >= cutoff:
+            fresh.append(SITE_URL + p["link"])
+    if not fresh:
+        return
+    body = json.dumps({"host": SITE_URL.split("//")[1], "key": INDEXNOW_KEY,
+                       "keyLocation": f"{SITE_URL}/{INDEXNOW_KEY}.txt", "urlList": fresh + [SITE_URL + "/"]}).encode()
+    try:
+        req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body,
+                                     headers={"Content-Type": "application/json; charset=utf-8", "User-Agent": UA})
+        urllib.request.urlopen(req, timeout=15)
+        print(f"  IndexNow: sent {len(fresh)} new stories")
+    except Exception as e:
+        print(f"  IndexNow skipped: {e}", file=sys.stderr)
+
+
 def write_industry(tpl, pages, items):
     """Around the industry: every outside headline in the archive, with topic filters, search, and Show more."""
     feed = [i for i in items if not i.get("original")]
@@ -2446,16 +2578,19 @@ def main():
 
     write_app_files(tpl, pages)
     write_industry(tpl, pages, items)
+    traffic_urls = write_traffic(tpl, pages, items, posts)
     vdata = update_videos()
     write_videos(tpl, pages, vdata)
-    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + (["/videos/"] if has_videos() else []) + ["/news/", "/industry/"] + state_urls
+    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + (["/videos/"] if has_videos() else []) + ["/news/", "/industry/"] + state_urls + traffic_urls
     (SITE / "index.html").write_text(render(items, posts, ok, pages))
     everything = sorted(posts + items, key=lambda i: i["published"], reverse=True)
     (SITE / "feed.xml").write_text(render_rss(everything))
     cards = make_social_cards(posts)
     (SITE / "news" / "feed.xml").write_text(render_story_rss(posts, cards))
     write_links_page(tpl, pages, posts)
-    (SITE / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n")
+    write_news_sitemap(posts)
+    ping_indexnow(posts)
+    (SITE / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\nSitemap: {SITE_URL}/news-sitemap.xml\n")
     urls = [f"<url><loc>{SITE_URL}/</loc><changefreq>hourly</changefreq></url>"]
     urls += [f'<url><loc>{SITE_URL}{p["link"]}</loc><lastmod>{p["published"][:10]}</lastmod></url>' for p in posts]
     urls += [f"<url><loc>{SITE_URL}/{n}/</loc></url>" for n in pages]
