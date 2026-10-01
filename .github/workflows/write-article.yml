@@ -1,12 +1,18 @@
-name: Write daily article
+name: Write articles
 
 on:
   schedule:
-    - cron: "30 10 * * *"   # every day, about 6:30 a.m. Eastern
+    - cron: "30 10 * * *"   # about 6:30 a.m. Eastern (guide on Mon/Wed/Fri, news other days)
+    - cron: "30 16 * * *"   # about 12:30 p.m. Eastern (news)
+    - cron: "30 22 * * *"   # about 6:30 p.m. Eastern (news)
   workflow_dispatch:         # "Run workflow" button for an extra article
 
 permissions:
   contents: write
+
+concurrency:
+  group: otrnews
+  cancel-in-progress: false
 
 jobs:
   write:
@@ -16,15 +22,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Research and write a draft
+      - name: Research and write an article
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          AUTO_PUBLISH: "false"   # "false" = saved as a draft for you to approve; "true" = goes live right away
         run: python write_article.py
-      - name: Save the draft
+      - name: Save
         run: |
           git config user.name "otrnews-bot"
           git config user.email "otrnews-bot@users.noreply.github.com"
-          git add posts images 2>/dev/null || git add posts
-          git diff --staged --quiet || (git commit -m "New article draft for review" && git pull --rebase && git push)
+          for p in posts images; do if [ -e "$p" ]; then git add "$p"; fi; done
+          git diff --staged --quiet || (git commit -m "New article" && git pull --rebase && git push)
