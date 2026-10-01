@@ -8,6 +8,20 @@
  },
  "videos": [
   {
+   "id": "i3tCnqTlUBc",
+   "title": "Playing Defense | Freightonomics",
+   "channel": "FreightWaves",
+   "published": "2026-10-01T18:31:08+00:00",
+   "summary": "Freight rates continue to feel pressure from fuel and capacity shortfalls while the economy continues to sustain despite ongoing inflation concerns."
+  },
+  {
+   "id": "U4JZRzyfOHk",
+   "title": "FreightWaves Today | October 1",
+   "channel": "FreightWaves",
+   "published": "2026-10-01T18:30:25+00:00",
+   "summary": "FreightWaves Today kicks off the fourth quarter with a packed episode covering autonomous trucking, freight market conditions, driver appreciation and the latest issues shaping transportation. Malcolm Harris and Zach Str"
+  },
+  {
    "id": "GVDgqD5UVmY",
    "title": "Free Driver Rewards Program? Samsara Targets Retention",
    "channel": "FreightWaves",
@@ -57,20 +71,6 @@
    "summary": "AI agents in trucking are here \u2014 but are they solving real freight problems or just rebranding old software? Thomas Wasson breaks down what stood out at Trimble Insight 2026: AI agents, yard flow management, shipper auto"
   },
   {
-   "id": "yqj0fC_qorA",
-   "title": "She Left Interior Design for a Box Truck. Here's What She Learned | The Long Haul",
-   "channel": "FreightWaves",
-   "published": "2026-10-01T15:00:10+00:00",
-   "summary": "Every week somebody watches a YouTube video about box trucking and decides it's their way out. Non-CDL. Low barrier to entry. Amazon Relay. Home every night. Six figures. The content makes it look straightforward. And fo"
-  },
-  {
-   "id": "jvet5a7GEAw",
-   "title": "Why Driver Retention Fails Before Day 1",
-   "channel": "FreightWaves",
-   "published": "2026-10-01T14:57:17+00:00",
-   "summary": "Tenstreet hiring and driver retention are the focus here\u2014what carriers get wrong, and where the process breaks before a driver ever gets seated. Brake Check sits down with Christy Choice of Tenstreet to talk through the "
-  },
-  {
    "id": "tv_bcCKKfqs",
    "title": "RS201: How Can AI and Cameras Enhance Driver Safety?",
    "channel": "Transport Topics",
@@ -85,5 +85,5 @@
    "summary": "As Transport Topics rolls out its redesigned magazine, the RoadSigns podcast marks its own milestone: 200 episodes. What have eight years and hundreds of conversations with trucking executives, technology developers, eco"
   }
  ],
- "updated": "2026-10-01T17:17:36.073630+00:00"
+ "updated": "2026-10-01T19:16:16.972069+00:00"
 }
