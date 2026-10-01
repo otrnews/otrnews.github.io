@@ -4,7 +4,7 @@ date: 2026-10-01T10:41:03+00:00
 summary: FMCSA, DHS and state police inspected more than 550 trucks overnight in SC, NC, GA and FL. Seventy-eight drivers were shut down. Here is what inspectors checked and how to prepare.
 category: Enforcement & safety
 author: OTR News Staff
-draft: true
+draft: false
 photo_idea: semi truck on interstate at night
 image: /images/2026-10-01-overnight-i-95-sweep-puts-78-truck-drivers-out-of-service-in.jpg
 image_alt: dongfeng, dongfeng truck, chinese truck, semi tractor, dongfeng, dongfeng truck, dongfeng truck, dongfeng truck, dongfeng truck, dongfeng truck, chine
