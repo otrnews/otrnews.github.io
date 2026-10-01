@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
   pages: write
   id-token: write
 
@@ -47,6 +48,15 @@ jobs:
       - name: Pull latest headlines and build site
         run: python build.py
 
+      - name: Big-story alert
+        id: big
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          AUTO_PUBLISH: "false"
+        run: python detect_big_story.py || echo "Big-story check skipped"
+
       - name: Save story archive
         run: |
           git config user.name "otrnews-bot"
@@ -61,3 +71,20 @@ jobs:
           path: site
       - id: deploy
         uses: actions/deploy-pages@v4
+
+      - name: Notify about big-story draft
+        if: steps.big.outputs.draft != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRAFT: ${{ steps.big.outputs.draft }}
+          TITLE: ${{ steps.big.outputs.title }}
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "Big story draft ready: $TITLE" \
+            --body "A big story is breaking and an explainer draft is ready to review.
+
+          Review and publish it here (change draft: true to draft: false, then commit):
+          https://github.com/$GITHUB_REPOSITORY/edit/main/$DRAFT
+
+          Close this issue once it's published or deleted." || echo "Could not open a notification issue"
+
