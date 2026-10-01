@@ -31,7 +31,7 @@ TRAINING_URL = "https://mycdlcoach.com"  # where "Get your CDL" buttons send peo
 TRAINING_PRICE = "$149"                 # shown on the training box ("" to hide)
 TRAINING_REGISTERED = False            # set True once FMCSA's Training Provider Registry shows you as active
 # Analytics and Google verification (leave "" until you have them)
-GOOGLE_ANALYTICS_ID = ""      # e.g. "G-ABC123XYZ" from Google Analytics
+GOOGLE_ANALYTICS_ID = "G-V4J6Q8XTNV"      # e.g. "G-ABC123XYZ" from Google Analytics
 PLAUSIBLE_DOMAIN = ""         # e.g. "otrnews.com" if you use Plausible instead
 GOOGLE_SITE_VERIFICATION = "" # the content="..." code from Google Search Console's HTML tag option
 LODOSHOP_URL = "https://lodoshop.com"             # paste your LodoShop store link here (e.g. "https://yourstore.com") to show it as a partner
