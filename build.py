@@ -972,14 +972,23 @@ def section_page(key, posts, items=()):
 
 # ---------- navigation, topics, tools ----------
 
-NAV = [("/", "OTR News"), ("/industry/", "Around the industry"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/guides/", "Guides"), ("/jobs/", "Jobs"), ("/videos/", "Videos"),
+NAV = [("/", "OTR News"), ("/industry/", "Around the industry"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/guides/", "Guides"), ("/jobs/", "Jobs"),
        ("/tools/cost-per-mile/", "Cost per mile"), ("/courses/", "Courses"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/about/", "About")]
+
+
+def has_videos():
+    """True once at least one video has been pulled; the Videos tab and boxes stay hidden until then."""
+    try:
+        return bool(json.loads((ROOT / "data" / "videos.json").read_text()).get("videos"))
+    except Exception:
+        return False
 
 
 def nav_html(current=""):
     return '<nav class="sitenav" aria-label="Site">' + "".join(
         f'<a href="{u}"' + (' aria-current="page"' if u == current else "") + f">{t}</a>"
-        for u, t in (NAV[:-1] + ([("/store/", "Store")] if EBOOKS else []) + ([(COMMUNITY_URL, "Community")] if COMMUNITY_URL else []) + NAV[-1:])) + "</nav>"
+        for u, t in (NAV[:6] + ([("/videos/", "Videos")] if has_videos() else []) + NAV[6:-1] + ([("/store/", "Store")] if EBOOKS else [])
+                     + ([(COMMUNITY_URL, "Community")] if COMMUNITY_URL else []) + NAV[-1:])) + "</nav>"
 
 
 def topic_slug(cat):
@@ -1507,8 +1516,9 @@ def tools_strip():
              ("/guides/", "Guides", "Money, health, repairs, jobs"),
              ("/toolkit/", "Driver toolkit", "Services we recommend"),
              ("/jobs/", "Job board", "New CDL jobs every 6 hours"),
-             ("/videos/", "Videos", "Trucking news and CDL tips"),
              ("/app/", "Get the app", "OTR News on your home screen")]
+    if has_videos():
+        tiles.insert(-1, ("/videos/", "Videos", "Trucking news and CDL tips"))
     cells = "".join(f'<a class="tile" href="{u}"><strong>{esc(t)}</strong><span>{esc(d)}</span></a>' for u, t, d in tiles)
     return f'<nav class="tiles" aria-label="Free tools">{cells}</nav>'
 
@@ -2218,10 +2228,11 @@ def main():
     write_industry(tpl, pages, items)
     vdata = update_videos()
     write_videos(tpl, pages, vdata)
-    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + ["/videos/", "/news/", "/industry/"]
+    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + (["/videos/"] if has_videos() else []) + ["/news/", "/industry/"]
     (SITE / "index.html").write_text(render(items, posts, ok, pages))
     everything = sorted(posts + items, key=lambda i: i["published"], reverse=True)
     (SITE / "feed.xml").write_text(render_rss(everything))
+    (SITE / "news" / "feed.xml").write_text(render_rss(posts).replace(f"<title>{SITE_NAME}</title>", f"<title>{SITE_NAME}: our stories</title>", 1))
     (SITE / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n")
     urls = [f"<url><loc>{SITE_URL}/</loc><changefreq>hourly</changefreq></url>"]
     urls += [f'<url><loc>{SITE_URL}{p["link"]}</loc><lastmod>{p["published"][:10]}</lastmod></url>' for p in posts]
