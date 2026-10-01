@@ -75,7 +75,7 @@ PARTNERS = [
 
 KEEP_DAYS = 30          # how long outside headlines stay in the archive
 ON_PAGE = 100           # outside headlines on the homepage
-ORIGINALS_ON_PAGE = 8   # our own articles leading the homepage
+ORIGINALS_ON_PAGE = 3   # our own articles leading the homepage (the rest are at /news/)
 
 ROOT = Path(__file__).parent
 SITE = ROOT / "site"
@@ -854,13 +854,15 @@ def jobs_html():
 <div class="jobs-tools"><input type="search" id="jobq" placeholder="Search by company, city, or keyword" aria-label="Search jobs">{chips}</div>
 <div id="joblist">{"".join(cards)}</div>
 <p class="fine" id="jobnone" hidden>No jobs match that search. Try a different word or job type.</p>
+<p><button type="button" class="btn" id="jobmore" hidden>Show more jobs</button></p>
 <p class="fine">Job data powered by <a href="https://www.adzuna.com" target="_blank" rel="noopener">Adzuna</a>.</p>
-<script>(function(){{var q=document.getElementById('jobq'),t='',bs=document.querySelectorAll('.jobs-tools button');
+<script>(function(){{var q=document.getElementById('jobq'),t='',lim=15,bs=document.querySelectorAll('.jobs-tools button'),more=document.getElementById('jobmore');
 function run(){{var s=q.value.toLowerCase(),n=0;document.querySelectorAll('#joblist .jobcard').forEach(function(j){{
-var ok=(!t||(' '+j.dataset.tags+' ').indexOf(' '+t+' ')>-1)&&(!s||j.textContent.toLowerCase().indexOf(s)>-1);j.hidden=!ok;if(ok)n++;}});
-document.getElementById('jobnone').hidden=n>0;}}
-q.addEventListener('input',run);bs.forEach(function(b){{b.addEventListener('click',function(){{t=b.dataset.type;
-bs.forEach(function(x){{x.setAttribute('aria-pressed',x===b?'true':'false');}});run();}});}});}})();</script>"""
+var ok=(!t||(' '+j.dataset.tags+' ').indexOf(' '+t+' ')>-1)&&(!s||j.textContent.toLowerCase().indexOf(s)>-1);if(ok)n++;j.hidden=!ok||n>lim;}});
+document.getElementById('jobnone').hidden=n>0;more.hidden=n<=lim;more.textContent='Show more jobs ('+(n-lim)+' more)';}}
+q.addEventListener('input',function(){{lim=15;run();}});more.addEventListener('click',function(){{lim+=30;run();}});
+bs.forEach(function(b){{b.addEventListener('click',function(){{t=b.dataset.type;lim=15;
+bs.forEach(function(x){{x.setAttribute('aria-pressed',x===b?'true':'false');}});run();}});}});run();}})();</script>"""
 
 
 def job_page(j):
@@ -1295,6 +1297,29 @@ def shell(tpl, pages, *, title, description, path, body, og_type="website", ld=N
 </body></html>"""
 
 
+VIDEO_STOP = set("this that with from your what when have will they their about into than then them more most over under after before driver drivers truck trucks trucking cdl news guide how".split())
+
+
+def related_video(p):
+    """A matching trucking video under an article (or the newest one if nothing matches)."""
+    try:
+        vids = json.loads(VIDEOS_FILE.read_text()).get("videos") or []
+    except Exception:
+        return ""
+    if not vids:
+        return ""
+    words = lambda t: {w for w in re.findall(r"[a-z0-9]+", (t or "").lower()) if len(w) > 3 and w not in VIDEO_STOP}
+    want = words(p["title"] + " " + p.get("summary", ""))
+    best, score = vids[0], 0
+    for v in vids[:60]:
+        sc = len(want & words(v["title"]))
+        if sc > score:
+            best, score = v, sc
+    label = "Related video" if score else "Latest trucking video"
+    return (f'<section class="tool-card"><h2>{label}</h2><div class="vgrid" style="grid-template-columns:1fr">{video_card(best)}</div>'
+            f'<a class="more-link" href="/videos/">More trucking videos</a></section>' + VIDEO_CSS + VIDEO_JS)
+
+
 def share_html(url, title, label="Share this story"):
     """Share buttons. On phones, 'Share' opens the phone's own share menu (Facebook app, Messages, WhatsApp, etc.)."""
     q = urllib.parse.quote
@@ -1342,6 +1367,7 @@ def render_article(p, posts, tpl, pages):
 </article>
 {training_box()}
 {partner_box(partner_named(p['partner'])) if p.get('partner') and partner_named(p['partner']) else ("".join(partner_box(x) for x in section_partners(p.get('section', ''))) or partner_box(pick_partner(p['category'], p['slug'])))}
+{related_video(p)}
 {lodoshop_ad()}
 {newsletter_box()}
 {more}
@@ -1452,6 +1478,7 @@ def tools_strip():
 
 def render(items, originals, sources_ok, pages):
     updated = datetime.now(timezone.utc)
+    more_ours = len(originals) - ORIGINALS_ON_PAGE
     originals = originals[:ORIGINALS_ON_PAGE]
     feed = items[:ON_PAGE]
     cats = [c for c, _ in CATEGORIES] + ["Industry"]
@@ -1460,6 +1487,8 @@ def render(items, originals, sources_ok, pages):
     chips = "".join(f'<button type="button" class="chip" data-filter="{esc(c)}" aria-pressed="false">{esc(c)}</button>' for c in present)
     if originals:
         ours = story_html(originals[0], True) + "\n".join(story_html(i) for i in originals[1:])
+        if more_ours > 0:
+            ours += (f'<p style="margin:1rem 0 1.5rem"><a class="btn" href="/news/">More from OTR News ({more_ours} more stories &amp; guides)</a></p>')
         industry_intro = '<h2 class="section-title" id="industry">Around the industry</h2>'
         parts = [story_html(i) for i in feed]
         parts.insert(min(8, len(parts)), partner_box(pick_partner("Industry", "home")))
@@ -2005,6 +2034,12 @@ def main():
         out = SITE / "news" / p["slug"]
         out.mkdir(parents=True, exist_ok=True)
         (out / "index.html").write_text(render_article(p, posts, tpl, pages))
+    out = SITE / "news"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "index.html").write_text(shell(tpl, pages, title="OTR News stories and guides", path="/news/",
+        description="Original reporting and guides from OTR News for owner-operators, small fleets, and drivers.",
+        body='<h1>From OTR News</h1><p class="deck">Our own reporting and guides, newest first.</p>'
+             + "".join(story_html(p, n == 0) for n, p in enumerate(posts)) + newsletter_box() + training_box()))
     for name, page in pages.items():
         out = SITE / name
         out.mkdir(parents=True, exist_ok=True)
@@ -2116,7 +2151,7 @@ def main():
     write_app_files(tpl, pages)
     vdata = update_videos()
     write_videos(tpl, pages, vdata)
-    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + ["/videos/"]
+    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages) + ["/videos/", "/news/"]
     (SITE / "index.html").write_text(render(items, posts, ok, pages))
     everything = sorted(posts + items, key=lambda i: i["published"], reverse=True)
     (SITE / "feed.xml").write_text(render_rss(everything))
