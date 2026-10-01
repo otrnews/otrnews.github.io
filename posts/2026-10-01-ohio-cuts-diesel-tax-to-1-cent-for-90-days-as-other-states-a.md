@@ -4,7 +4,7 @@ date: 2026-10-01T16:37:25+00:00
 summary: Ohio's governor signed a 90-day diesel tax suspension on Thursday. Other states are also moving on fuel taxes as diesel sits near its record. Here is what applies to truckers.
 category: Fuel
 author: OTR News Staff
-draft: true
+draft: false
 photo_idea: semi truck at diesel fuel pump
 image: /images/2026-10-01-ohio-cuts-diesel-tax-to-1-cent-for-90-days-as-other-states-a.jpg
 image_alt: fuel, pump, car wallpapers, energy, gas pump, gas station, diesel fuel, gasoline, unleaded, refinery, car, road, breakdown, full, gun, tank, auto
