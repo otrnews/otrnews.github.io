@@ -4,7 +4,7 @@ date: 2026-10-01T22:40:40+00:00
 summary: About 50 owner-operators allege Red Line Logistics understated load revenue to cut their pay. The claims are unproven, but the case shows why percentage-pay drivers should check paperwork.
 category: Business
 author: OTR News Staff
-draft: true
+draft: false
 photo_idea: semi truck driver reviewing paperwork
 image: /images/2026-10-01-owner-operators-sue-michigan-carrier-say-it-hid-what-loads-r.jpg
 image_alt: truck, driver, transport, traffic, vehicle, freight, vehicles, driver's license, steering wheel, truck driver, van driver, driving instructor, truck d
