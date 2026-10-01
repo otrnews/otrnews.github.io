@@ -776,6 +776,7 @@ JOBS_CSS = """<style>
 .jobs-head h2{margin:0}
 .jobs-count{font-weight:700;color:#0a6b47}
 .jobs-tools{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}
+.jobs-tools select{flex:1 1 100%;font:inherit;padding:.65rem .75rem;border:1px solid #cfd6d2;border-radius:10px;background:transparent;color:inherit}
 .jobs-tools input{flex:1 1 100%;font:inherit;padding:.7rem .85rem;border:1px solid #cfd6d2;border-radius:10px}
 .jobs-tools button{font:inherit;font-size:.9rem;padding:.4rem .8rem;border:1px solid #cfd6d2;border-radius:999px;background:transparent;cursor:pointer;color:inherit}
 .jobs-tools button[aria-pressed="true"]{background:#0a6b47;border-color:#0a6b47;color:#fff}
@@ -797,6 +798,33 @@ JOB_TYPE_LABEL = {"otr": "OTR", "regional": "Regional", "local": "Local / home d
 JOB_TYPES = [("", "All jobs"), ("otr", "OTR"), ("regional", "Regional"), ("local", "Local / home daily"), ("owner", "Owner-operator / lease")]
 
 
+US_STATES = {"Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR", "California": "CA", "Colorado": "CO",
+    "Connecticut": "CT", "Delaware": "DE", "District of Columbia": "DC", "Florida": "FL", "Georgia": "GA", "Hawaii": "HI",
+    "Idaho": "ID", "Illinois": "IL", "Indiana": "IN", "Iowa": "IA", "Kansas": "KS", "Kentucky": "KY", "Louisiana": "LA",
+    "Maine": "ME", "Maryland": "MD", "Massachusetts": "MA", "Michigan": "MI", "Minnesota": "MN", "Mississippi": "MS",
+    "Missouri": "MO", "Montana": "MT", "Nebraska": "NE", "Nevada": "NV", "New Hampshire": "NH", "New Jersey": "NJ",
+    "New Mexico": "NM", "New York": "NY", "North Carolina": "NC", "North Dakota": "ND", "Ohio": "OH", "Oklahoma": "OK",
+    "Oregon": "OR", "Pennsylvania": "PA", "Rhode Island": "RI", "South Carolina": "SC", "South Dakota": "SD",
+    "Tennessee": "TN", "Texas": "TX", "Utah": "UT", "Vermont": "VT", "Virginia": "VA", "Washington": "WA",
+    "West Virginia": "WV", "Wisconsin": "WI", "Wyoming": "WY"}
+STATE_NAMES = {v: k for k, v in US_STATES.items()}
+
+
+def job_state(j):
+    """Two-letter state for a job, from Adzuna's area data or the location text."""
+    st = (j.get("state") or "").strip()
+    if st in US_STATES:
+        return US_STATES[st]
+    if st in STATE_NAMES:
+        return st
+    loc = j.get("location", "")
+    for name, ab in sorted(US_STATES.items(), key=lambda x: -len(x[0])):
+        if re.search(r"\b" + re.escape(name) + r"\b", loc):
+            return ab
+    m = re.search(r",\s*([A-Z]{2})\b", loc)
+    return m.group(1) if m and m.group(1) in STATE_NAMES else ""
+
+
 def load_jobs():
     try:
         data = json.loads(JOBS_FILE.read_text())
@@ -807,6 +835,9 @@ def load_jobs():
         if not j.get("id"):
             j["id"] = str(__import__("zlib").crc32(j.get("url", "").encode()))
         j["slug"] = slugify(f'{j.get("title", "")} {j.get("location", "")}')[:60].strip("-") + "-" + str(j["id"])
+        j["st"] = job_state(j)
+        loc = j.get("location", "")
+        j["place"] = (loc + ", " + j["st"]) if j["st"] and not loc.endswith(j["st"]) and STATE_NAMES.get(j["st"], "#") not in loc else loc
     return data.get("updated"), jobs
 
 
@@ -839,28 +870,34 @@ def jobs_html():
         return ""
     chips = "".join(f'<button type="button" data-type="{k}" aria-pressed="{"true" if not k else "false"}">{esc(t)}</button>'
                     for k, t in JOB_TYPES)
+    counts = {}
+    for j in jobs[:150]:
+        if j.get("st"):
+            counts[j["st"]] = counts.get(j["st"], 0) + 1
+    state_opts = "".join(f'<option value="{ab}">{esc(STATE_NAMES[ab])} ({n})</option>' for ab, n in sorted(counts.items(), key=lambda x: STATE_NAMES[x[0]]))
     cards = []
     for j in jobs[:150]:
         initial = esc((j.get("company") or "?").strip()[:1].upper())
-        cards.append(f"""<article class="jobcard" data-tags="{esc(" ".join(j.get("tags", [])))}">
+        cards.append(f"""<article class="jobcard" data-tags="{esc(" ".join(j.get("tags", [])))}" data-state="{esc(j.get("st", ""))}">
 <span class="logo" aria-hidden="true">{initial}</span>
 <h3><a href="/jobs/{j["slug"]}/">{esc(j["title"])}</a></h3>
-<p class="co">{esc(j.get("company", ""))} &middot; {esc(j.get("location", ""))} &middot; {esc(posted_label(j.get("posted", "")))}</p>
+<p class="co">{esc(j.get("company", ""))} &middot; {esc(j.get("place") or j.get("location", ""))} &middot; {esc(posted_label(j.get("posted", "")))}</p>
 <div class="tags">{job_tags(j)}</div>
 <a class="btn btn-alt go" href="/jobs/{j["slug"]}/">View job</a>
 </article>""")
     return f"""<div class="jobs-head" id="jobs"><h2 class="section-title">OTR News Job Board</h2><span class="jobs-count">{len(jobs)} open driving jobs</span></div>
 <p class="fine">CDL-A, regional, local, and owner-operator jobs, updated every 6 hours.</p>
-<div class="jobs-tools"><input type="search" id="jobq" placeholder="Search by company, city, or keyword" aria-label="Search jobs">{chips}</div>
+<div class="jobs-tools"><input type="search" id="jobq" placeholder="Search by company, city, or keyword" aria-label="Search jobs">
+<select id="jobst" aria-label="State"><option value="">All states</option>{state_opts}</select>{chips}</div>
 <div id="joblist">{"".join(cards)}</div>
 <p class="fine" id="jobnone" hidden>No jobs match that search. Try a different word or job type.</p>
 <p><button type="button" class="btn" id="jobmore" hidden>Show more jobs</button></p>
 <p class="fine">Job data powered by <a href="https://www.adzuna.com" target="_blank" rel="noopener">Adzuna</a>.</p>
-<script>(function(){{var q=document.getElementById('jobq'),t='',lim=15,bs=document.querySelectorAll('.jobs-tools button'),more=document.getElementById('jobmore');
+<script>(function(){{var q=document.getElementById('jobq'),st=document.getElementById('jobst'),t='',lim=15,bs=document.querySelectorAll('.jobs-tools button'),more=document.getElementById('jobmore');
 function run(){{var s=q.value.toLowerCase(),n=0;document.querySelectorAll('#joblist .jobcard').forEach(function(j){{
-var ok=(!t||(' '+j.dataset.tags+' ').indexOf(' '+t+' ')>-1)&&(!s||j.textContent.toLowerCase().indexOf(s)>-1);if(ok)n++;j.hidden=!ok||n>lim;}});
+var ok=(!t||(' '+j.dataset.tags+' ').indexOf(' '+t+' ')>-1)&&(!st.value||j.dataset.state===st.value)&&(!s||j.textContent.toLowerCase().indexOf(s)>-1);if(ok)n++;j.hidden=!ok||n>lim;}});
 document.getElementById('jobnone').hidden=n>0;more.hidden=n<=lim;more.textContent='Show more jobs ('+(n-lim)+' more)';}}
-q.addEventListener('input',function(){{lim=15;run();}});more.addEventListener('click',function(){{lim+=30;run();}});
+q.addEventListener('input',function(){{lim=15;run();}});st.addEventListener('change',function(){{lim=15;run();}});more.addEventListener('click',function(){{lim+=30;run();}});
 bs.forEach(function(b){{b.addEventListener('click',function(){{t=b.dataset.type;lim=15;
 bs.forEach(function(x){{x.setAttribute('aria-pressed',x===b?'true':'false');}});run();}});}});run();}})();</script>"""
 
@@ -870,7 +907,7 @@ def job_page(j):
     return f"""<article class="jobdetail">
 <p class="meta"><a class="cat" href="/jobs/">OTR News Job Board</a></p>
 <h1>{esc(j["title"])}</h1>
-<p class="deck">{esc(j.get("company", ""))} &middot; {esc(j.get("location", ""))}</p>
+<p class="deck">{esc(j.get("company", ""))} &middot; {esc(j.get("place") or j.get("location", ""))}</p>
 <div class="facts tags">{job_tags(j)}<span class="tag">{esc(posted_label(j.get("posted", "")))}</span></div>
 <div class="body"><h2>About this job</h2><p>{desc}</p></div>
 <p class="apply"><a class="btn" href="{esc(j["url"])}" target="_blank" rel="noopener nofollow">Apply now</a></p>

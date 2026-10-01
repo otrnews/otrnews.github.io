@@ -77,6 +77,7 @@ def main():
                     "title": re.sub("<[^>]+>", "", title),
                     "company": company,
                     "location": (j.get("location") or {}).get("display_name", ""),
+                    "state": ((j.get("location") or {}).get("area") or ["", ""])[1] if len((j.get("location") or {}).get("area") or []) > 1 else "",
                     "pay": pay(j),
                     "id": str(j.get("id", "")),
                     "snippet": re.sub("<[^>]+>", "", desc)[:260].rstrip() + "…",
