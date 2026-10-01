@@ -984,11 +984,28 @@ def has_videos():
         return False
 
 
+NAV_PRIMARY = ["/", "/industry/", "/jobs/", "/courses/", "/store/"]   # always shown; the rest go under "More" on phones
+NAV_CSS = """<style>
+.sitenav .nav-more{font:inherit;font-weight:inherit;color:inherit;background:none;border:0;padding:inherit;margin:0;cursor:pointer}
+.sitenav .nav-more.here{text-decoration:underline;text-decoration-color:#F2B01E;text-decoration-thickness:3px;text-underline-offset:8px}
+.sitenav .nav-rest{display:none}
+.sitenav.open .nav-rest{display:contents}
+@media (min-width:56rem){.sitenav .nav-more{display:none}.sitenav .nav-rest{display:contents}}
+</style>"""
+
+
 def nav_html(current=""):
-    return '<nav class="sitenav" aria-label="Site">' + "".join(
-        f'<a href="{u}"' + (' aria-current="page"' if u == current else "") + f">{t}</a>"
-        for u, t in (NAV[:6] + ([("/videos/", "Videos")] if has_videos() else []) + NAV[6:-1] + ([("/store/", "Store")] if EBOOKS else [])
-                     + ([(COMMUNITY_URL, "Community")] if COMMUNITY_URL else []) + NAV[-1:])) + "</nav>"
+    links = (NAV[:6] + ([("/videos/", "Videos")] if has_videos() else []) + NAV[6:-1] + ([("/store/", "Store")] if EBOOKS else [])
+             + ([(COMMUNITY_URL, "Community")] if COMMUNITY_URL else []) + NAV[-1:])
+    a = lambda u, t: f'<a href="{u}"' + (' aria-current="page"' if u == current else "") + f">{t}</a>"
+    primary = [l for p in NAV_PRIMARY for l in links if l[0] == p]
+    rest = [l for l in links if l not in primary]
+    here = any(u == current for u, _ in rest)
+    return (NAV_CSS + '<nav class="sitenav" aria-label="Site">' + "".join(a(u, t) for u, t in primary)
+            + f'<button type="button" class="nav-more{" here" if here else ""}" aria-expanded="false" '
+              'onclick="var n=this.parentNode;n.classList.toggle(\'open\');this.setAttribute(\'aria-expanded\',n.classList.contains(\'open\'));'
+              'this.textContent=n.classList.contains(\'open\')?\'Less \u25b4\':\'More \u25be\'">More &#9662;</button>'
+            + '<span class="nav-rest">' + "".join(a(u, t) for u, t in rest) + "</span></nav>")
 
 
 def topic_slug(cat):
@@ -1242,8 +1259,6 @@ def newsletter_box():
         backup = (f'<p class="fine" style="margin-top:.5rem">Form not showing? <a href="{esc(NEWSLETTER_URL)}" target="_blank" rel="noopener">Sign up here</a>.</p>'
                   if NEWSLETTER_URL else "")
         return f"""<aside class="signup" id="signup">
-<h2>{title}</h2>
-<p>{lead}</p>
 <div class="kajabi-form" style="background:#fff;color:#111;border-radius:12px;padding:.25rem;max-width:34rem">
 <script src="{esc(NEWSLETTER_EMBED)}"></script>
 </div>
