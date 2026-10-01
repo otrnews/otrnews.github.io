@@ -2267,7 +2267,8 @@ def render_story_rss(posts, cards):
         img = ""
         if i["slug"] in cards:
             u, n = cards[i["slug"]]
-            img = f'<enclosure url="{esc(u)}" length="{n}" type="image/jpeg"/><media:content url="{esc(u)}" medium="image" type="image/jpeg"/>'
+            img = (f'<enclosure url="{esc(u)}" length="{n}" type="image/jpeg"/><media:content url="{esc(u)}" medium="image" type="image/jpeg"/>'
+                   f'<imageurl>{esc(u)}</imageurl>')
         out.append(f"<item><title>{esc(i['title'])}</title><link>{esc(link)}</link><guid isPermaLink=\"true\">{esc(link)}</guid>"
                    f"<pubDate>{d}</pubDate><category>{esc(i['category'])}</category><description>{esc(i['summary'])}</description>{img}</item>")
     now = format_datetime(datetime.now(timezone.utc))
