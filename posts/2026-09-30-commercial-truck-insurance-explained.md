@@ -8,6 +8,10 @@ draft: false
 section: insurance
 guide_topic: Commercial truck insurance explained: the coverages owner-operators need
 photo_idea: semi truck on highway
+image: /images/2026-09-30-commercial-truck-insurance-explained.jpg
+image_alt: highway, road, trucks, vehicles, traffic, transport, transport vehicles, highway, highway, highway, highway, trucks, trucks, trucks, trucks, traffic, 
+credit: Image by Schwoaze from Pixabay
+credit_url: https://pixabay.com/photos/highway-road-trucks-vehicles-3392100/
 ---
 
 Insurance is one of the largest costs of running your own truck, and getting it wrong can cost your authority or your business. Here's what each coverage does and which ones you actually need.

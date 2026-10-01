@@ -4,6 +4,10 @@ date: 2026-09-29T12:00:00-04:00
 summary: FMCSA has paused USDOT deactivations for missed biennial updates while it fixes its new registration system. Here's what small carriers should do in the meantime.
 category: Regulations
 author: OTR News Staff
+image: /images/2026-09-29-motus-usdot-deactivation-pause.jpg
+image_alt: police, truck, semi, semi-truck, drive, vehicle, transport, safety, traffic, truck, truck, truck, truck, truck, semi, semi
+credit: Image by fkevin from Pixabay
+credit_url: https://pixabay.com/photos/police-truck-semi-semi-truck-drive-1499374/
 ---
 
 If you've spent hours fighting FMCSA's new registration system this summer, you're not alone, and the agency has admitted it. FMCSA has temporarily stopped deactivating USDOT numbers for carriers who miss their biennial update, giving everyone breathing room while it works the bugs out of Motus.
