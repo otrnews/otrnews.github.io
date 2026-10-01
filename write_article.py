@@ -138,8 +138,8 @@ training company by name."""
 
 
 def pick_assignment(now):
-    """Mondays and Thursdays are guide days, rotating through the guide sections; other days are news."""
-    if now.weekday() in (0, 3):
+    """Morning runs on Monday, Wednesday, and Friday write a guide (rotating sections); every other run writes news."""
+    if now.weekday() in (0, 2, 4) and now.hour < 14:
         done = [f.read_text(encoding="utf-8").lower() for f in POSTS.glob("*.md")]
         guides_so_far = sum(1 for d in done if "guide_topic:" in d)
         order = list(GUIDE_TOPICS)
@@ -323,12 +323,13 @@ def main():
         sys.exit("The reply didn't contain an article. Raw reply:\n" + text[:2000])
     article = text[start:].strip() + "\n"
 
-    # Always save as a draft, whatever the model wrote
+    # Save as a draft for review (or publish right away if AUTO_PUBLISH is "true" in the workflow)
+    auto = os.environ.get("AUTO_PUBLISH", "").strip().lower() == "true"
     head_end = article.find("---", 3)
     head = article[:head_end]
-    head = re.sub(r"^draft:.*$", "draft: true", head, flags=re.M)
+    head = re.sub(r"^draft:.*$", f"draft: {'false' if auto else 'true'}", head, flags=re.M)
     if "draft:" not in head:
-        head = head.rstrip() + "\ndraft: true\n"
+        head = head.rstrip() + f"\ndraft: {'false' if auto else 'true'}\n"
     if guide_topic:
         head = head.rstrip() + f"\nguide_topic: {guide_topic}\nsection: {section}\n"
     article = head + article[head_end:]
