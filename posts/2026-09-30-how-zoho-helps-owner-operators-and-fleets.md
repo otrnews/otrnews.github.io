@@ -10,6 +10,10 @@ section: finance
 partner: Zoho
 guide_topic: How Zoho can help owner-operators and small fleets
 photo_idea: truck driver paperwork in cab
+image: /images/2026-09-30-how-zoho-helps-owner-operators-and-fleets.jpg
+image_alt: woman, truck, vehicle, driver, fashion, headscarf, female, model, outdoors, person, young, pickup truck, drive, truck, truck, truck, truck, truck, dri
+credit: Image by Pexels from Pixabay
+credit_url: https://pixabay.com/photos/woman-truck-vehicle-driver-fashion-1845572/
 ---
 
 Most owner-operators got into trucking to haul freight, not to chase invoices, sort receipts, and dig through email for a rate confirmation. But the business side decides whether the truck makes money. Zoho is a set of business apps that can handle much of that work from one account, and it is priced for small companies.

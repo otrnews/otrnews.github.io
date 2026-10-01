@@ -9,6 +9,10 @@ slug: truck-factoring-explained-outgo
 section: finance
 guide_topic: Truck factoring explained: how it works, what it costs, and when it makes sense
 photo_idea: semi truck fleet parked
+image: /images/2026-09-30-truck-factoring-explained-outgo.jpg
+image_alt: truck, semi, transportation, semi truck, shipping, vehicle, transport, trucking, semi-truck, truck, truck, truck, truck, truck, semi truck, trucking
+credit: Image by rgaudet17 from Pixabay
+credit_url: https://pixabay.com/photos/truck-semi-transportation-3401529/
 ---
 
 Brokers often take 30 days or longer to pay. Fuel, insurance, and the truck note don't wait. That gap is where a lot of small carriers get into trouble, and it's the problem factoring is built to solve.

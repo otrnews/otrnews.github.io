@@ -8,6 +8,10 @@ draft: false
 section: jobs
 guide_topic: How to read a trucking job ad: pay, home time, and red flags
 photo_idea: truck driver in cab
+image: /images/2026-09-30-how-to-read-a-trucking-job-ad.jpg
+image_alt: tractor, driver's cab, model, truck, handwork, transport, trucks, commercial vehicle, vice, semi-trailer
+credit: Image by Ralphs_Fotos from Pixabay
+credit_url: https://pixabay.com/photos/tractor-drivers-cab-model-truck-2305107/
 ---
 
 Trucking job ads are written to get a call, so they lead with the biggest number they can. The real job is in the details. Here's how to read an ad and what to ask before you sign anything.

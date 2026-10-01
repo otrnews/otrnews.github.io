@@ -8,6 +8,10 @@ draft: false
 section: repairs
 guide_topic: What to do when your truck breaks down on the highway
 photo_idea: semi truck broken down on shoulder
+image: /images/2026-09-30-what-to-do-when-your-truck-breaks-down.jpg
+image_alt: digger, excavator, engine, heavy, loader, lorry, machine, machinery, quarry, sand, semi-trailer truck, soil, trailer, transportation system, truck, ve
+credit: Image by Pexels from Pixabay
+credit_url: https://pixabay.com/photos/digger-excavator-engine-heavy-1867268/
 ---
 
 A breakdown costs money, but a truck stopped on the shoulder is also a crash risk. What you do in the first ten minutes matters most.

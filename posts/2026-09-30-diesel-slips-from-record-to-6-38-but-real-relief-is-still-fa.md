@@ -5,6 +5,10 @@ summary: Diesel fell about 15 cents from its record in the latest EIA reading. T
 category: Fuel
 author: OTR News Staff
 draft: false
+image: /images/2026-09-30-diesel-slips-from-record-to-6-38-but-real-relief-is-still-fa.jpg
+image_alt: gas station, gas pump, refuel, diesel, fuel pump, fuel, tank, gasoline price, gas station, gas station, gas station, gas station, gas station, gas pum
+credit: Image by planet_fox from Pixabay
+credit_url: https://pixabay.com/photos/gas-station-gas-pump-refuel-diesel-4978824/
 ---
 
 Diesel dropped this week for the first time in a month, but the drop is small and the price is still extremely high. The national average was $6.382 a gallon in the Sept. 29 EIA weekly survey. The week before, it hit a record $6.529, according to EIA weekly regional figures published by SMC3. That is about 15 cents of relief on a fill-up that now costs well over $1,000 for many trucks.

@@ -5,6 +5,10 @@ summary: FMCSA turned down a driver group's request to let any driver use paper 
 category: Regulations
 author: OTR News Staff
 draft: false
+image: /images/2026-09-30-fmcsa-denies-paper-log-exemption-elds-still-required-for-you.jpg
+image_alt: oversize load, oversized load, oversized, huge, big, wide, truck, diesel truck, semi, semitruck, semi-truck, truck and trailer, transportation, transi
+credit: Image by royharryman from Pixabay
+credit_url: https://pixabay.com/photos/oversize-load-oversized-load-5307208/
 ---
 
 FMCSA has denied a request that would have let drivers go back to paper logbooks. If you're required to keep records of duty status, you still need a compliant ELD. Nothing changes on the road.

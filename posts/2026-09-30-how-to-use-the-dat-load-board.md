@@ -8,6 +8,10 @@ draft: false
 section: finance
 guide_topic: How to use the DAT load board
 photo_idea: semi trucks loading dock freight
+image: /images/2026-09-30-how-to-use-the-dat-load-board.jpg
+image_alt: ship, cranes, loading, dock, port, pier, machinery, heavy machinery, cargo, cargo ship, shipping, shipping industry, freight, freight transport, freig
+credit: Image by hunt-er from Pixabay
+credit_url: https://pixabay.com/photos/ship-cranes-loading-dock-port-5810249/
 ---
 
 For an owner-operator or small fleet, the load board is where the week gets made or lost. DAT One is the most widely used load board in North America. That matters for one reason: more brokers posting means more loads to choose from, and more choice means you can say no to freight that doesn't pay.

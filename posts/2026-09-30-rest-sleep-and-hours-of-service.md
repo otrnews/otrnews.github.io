@@ -8,6 +8,10 @@ draft: false
 section: health
 guide_topic: Rest, sleep, and hours of service for truck drivers
 photo_idea: trucks parked at truck stop night
+image: /images/2026-09-30-rest-sleep-and-hours-of-service.jpg
+image_alt: truck, snow, winter, nature, landscape, trees, red truck, christmas, wintry, cold, truck, winter, christmas, christmas, christmas, christmas, christma
+credit: Image by JillWellington from Pixabay
+credit_url: https://pixabay.com/photos/truck-snow-winter-nature-landscape-4666300/
 ---
 
 A tired driver misses exits, drifts on long straight stretches, and reacts late when traffic stops. One fatigue-related crash can end a career, raise insurance for years, or worse. Rest isn't time off from the job. It's part of doing it safely.
