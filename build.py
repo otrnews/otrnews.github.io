@@ -238,6 +238,8 @@ def merge(old, new, allowed_sources):
     for i in new + old:  # newest copies first
         if i.get("original") or i.get("source") not in allowed_sources:
             continue  # drops sources you've switched off in feeds.txt
+        if re.search(r"\b(sponsored|paid content|advertorial|partner content)\b", (i.get("title") or "") + " " + (i.get("summary") or ""), re.I):
+            continue  # other outlets' paid ads already in the archive
         k, sk = key_for(i), summary_key(i)
         if k in by_key or i["link"] in seen_links or (sk and sk in seen_summaries):
             continue  # same story re-titled or re-posted
@@ -848,7 +850,7 @@ def jobs_html():
 <a class="btn btn-alt go" href="/jobs/{j["slug"]}/">View job</a>
 </article>""")
     return f"""<div class="jobs-head" id="jobs"><h2 class="section-title">OTR News Job Board</h2><span class="jobs-count">{len(jobs)} open driving jobs</span></div>
-<p class="fine">CDL-A, regional, local, and owner-operator jobs, updated every morning.</p>
+<p class="fine">CDL-A, regional, local, and owner-operator jobs, updated every 6 hours.</p>
 <div class="jobs-tools"><input type="search" id="jobq" placeholder="Search by company, city, or keyword" aria-label="Search jobs">{chips}</div>
 <div id="joblist">{"".join(cards)}</div>
 <p class="fine" id="jobnone" hidden>No jobs match that search. Try a different word or job type.</p>
@@ -911,7 +913,7 @@ def section_page(key, posts, items=()):
     partners = section_partners(key, topics[0]) if key != "training" else []
     if key == "jobs":
         body += jobs_html() or ('<h2 class="section-title" id="jobs">OTR News Job Board</h2>'
-                                '<p class="fine">New job listings load every morning. Check back soon, or try the job boards below.</p>')
+                                '<p class="fine">New job listings load every 6 hours. Check back soon, or try the job boards below.</p>')
         body += newsletter_box()
         body += "".join(partner_box(p) for p in partners)
         body += job_boards_html()
@@ -936,7 +938,8 @@ NAV = [("/", "Latest"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/t
 
 def nav_html(current=""):
     return '<nav class="sitenav" aria-label="Site">' + "".join(
-        f'<a href="{u}"' + (' aria-current="page"' if u == current else "") + f">{t}</a>" for u, t in NAV) + "</nav>"
+        f'<a href="{u}"' + (' aria-current="page"' if u == current else "") + f">{t}</a>"
+        for u, t in (NAV[:-1] + [("/store/", "Store"), NAV[-1]] if EBOOKS else NAV)) + "</nav>"
 
 
 def topic_slug(cat):
@@ -1366,6 +1369,17 @@ def question_of_the_day():
 </section>"""
 
 
+def jobs_strip(n=5):
+    """Newest jobs on the homepage."""
+    _, jobs = load_jobs()
+    if not jobs:
+        return ""
+    rows = "".join(f'<li><a href="/jobs/{j["slug"]}/"><strong>{esc(j["title"])}</strong></a>'
+                   f'<span class="fine"> {esc(j.get("company", ""))} &middot; {esc(j.get("location", ""))}</span></li>' for j in jobs[:n])
+    return (f'<section class="tool-card home-jobs"><h2><a href="/jobs/">New trucking jobs</a></h2><ul>{rows}</ul>'
+            f'<a class="btn" href="/jobs/">See all {len(jobs)} jobs</a></section>')
+
+
 def tools_strip():
     tiles = [("/courses/", "Free CDL courses", "12 lessons with quizzes"),
              ("/tools/cdl-practice-test/", "CDL practice test", "49 questions with explanations"),
@@ -1405,7 +1419,7 @@ def render(items, originals, sources_ok, pages):
                .replace("{{SOURCE_COUNT}}", str(sources_ok))
                .replace("{{CHIPS}}", chips)
                .replace("{{ORIGINALS}}", ours)
-               .replace("{{NEWSLETTER}}", tools_strip() + question_of_the_day() + training_box() + newsletter_box())
+               .replace("{{NEWSLETTER}}", tools_strip() + newsletter_box() + question_of_the_day() + jobs_strip() + training_box())
                .replace("{{PARENT}}", parent_line())
                .replace("{{INDUSTRY_TITLE}}", industry_intro)
                .replace("{{STORIES}}", feed_html)
@@ -1626,6 +1640,78 @@ def write_courses(tpl, pages):
     return urls
 
 
+try:
+    from store_content import EBOOKS
+except Exception:
+    EBOOKS = []
+EBOOKS = [e for e in EBOOKS if e.get("title") and e.get("url") and e.get("slug")]
+
+STORE_CSS = """<style>
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(10.5rem,1fr));gap:1rem;margin:1.25rem 0}
+.book{display:flex;flex-direction:column;gap:.4rem;text-decoration:none;color:inherit}
+.book img,.book .nocover{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.book .nocover{display:grid;place-items:center;text-align:center;padding:1rem;background:#00603C;color:#fff;font-weight:800}
+.book strong{font-size:1rem;line-height:1.25}
+.book .price{font-weight:800;color:#00603C}
+.book-hero{display:grid;grid-template-columns:minmax(8rem,12rem) 1fr;gap:1.25rem;align-items:start;margin:1rem 0}
+.book-hero img,.book-hero .nocover{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.book-hero .nocover{display:grid;place-items:center;text-align:center;padding:1rem;background:#00603C;color:#fff;font-weight:800}
+.book-hero .price{font-size:1.6rem;font-weight:900;margin:.25rem 0 .75rem}
+@media (max-width:34rem){.book-hero{grid-template-columns:1fr}.book-hero img,.book-hero .nocover{max-width:12rem}}
+@media (prefers-color-scheme: dark){.book .price{color:#7fd6a8}}
+</style>"""
+
+
+def cover_html(e):
+    if e.get("cover"):
+        return f'<img src="{esc(e["cover"])}" alt="Cover of {esc(e["title"])}" loading="lazy">'
+    return f'<div class="nocover">{esc(e["title"])}</div>'
+
+
+def write_store(tpl, pages):
+    if not EBOOKS:
+        return []
+    out = SITE / "store"
+    out.mkdir(parents=True, exist_ok=True)
+    cards = "".join(f'<a class="book" href="/store/{e["slug"]}/">{cover_html(e)}<strong>{esc(e["title"])}</strong>'
+                    f'<span class="price">{esc(e.get("price", ""))}</span></a>' for e in EBOOKS)
+    body = ('<h1>OTR News Store</h1><p class="deck">Ebooks and guides for drivers, owner-operators, and small fleets. '
+            'Instant download after purchase.</p>' + f'<div class="shelf">{cards}</div>' + newsletter_box() + training_box())
+    (out / "index.html").write_text(shell(tpl, pages, title="Trucking ebooks and guides", path="/store/", body=body, extra_css=STORE_CSS,
+        description="Ebooks for truck drivers, owner-operators, and small fleets from OTR News."))
+    urls = ["/store/"]
+    for e in EBOOKS:
+        inside = "".join(f"<li>{esc(x)}</li>" for x in e.get("inside", []))
+        buy = f'<a class="btn" href="{esc(e["url"])}" target="_blank" rel="noopener">Buy now{(" " + esc(e["price"])) if e.get("price") else ""}</a>'
+        others = "".join(f'<a class="book" href="/store/{x["slug"]}/">{cover_html(x)}<strong>{esc(x["title"])}</strong>'
+                         f'<span class="price">{esc(x.get("price", ""))}</span></a>' for x in EBOOKS if x["slug"] != e["slug"])[:4000]
+        bbody = (f'<p class="meta"><a class="cat" href="/store/">OTR News Store</a></p>'
+                 f'<div class="book-hero">{cover_html(e)}<div><h1>{esc(e["title"])}</h1>'
+                 + (f'<p class="deck">{esc(e["subtitle"])}</p>' if e.get("subtitle") else "")
+                 + (f'<p class="price">{esc(e["price"])}</p>' if e.get("price") else "") + buy
+                 + (f'<p class="fine">{esc(e["pages"])}. Instant download.</p>' if e.get("pages") else '<p class="fine">Instant download.</p>')
+                 + '</div></div>'
+                 + (f'<div class="body"><p>{esc(e["description"])}</p></div>' if e.get("description") else "")
+                 + (f'<section class="tool-card"><h2>What\'s inside</h2><ul>{inside}</ul></section>' if inside else "")
+                 + f'<p>{buy}</p>'
+                 + (f'<h2 class="section-title">More from the store</h2><div class="shelf">{others}</div>' if others else "")
+                 + training_box())
+        price_num = re.sub(r"[^0-9.]", "", e.get("price", ""))
+        ld = {"@context": "https://schema.org", "@type": "Product", "name": e["title"], "description": e.get("description", ""),
+              "brand": {"@type": "Brand", "name": SITE_NAME}}
+        if e.get("cover"):
+            ld["image"] = SITE_URL + e["cover"] if e["cover"].startswith("/") else e["cover"]
+        if price_num:
+            ld["offers"] = {"@type": "Offer", "price": price_num, "priceCurrency": "USD", "url": e["url"], "availability": "https://schema.org/InStock"}
+        d = out / e["slug"]
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "index.html").write_text(shell(tpl, pages, title=e["title"], path=f'/store/{e["slug"]}/', body=bbody, ld=ld, extra_css=STORE_CSS,
+            description=(e.get("subtitle") or e.get("description") or e["title"])[:155],
+            og_image=e["cover"] if e.get("cover", "").startswith("/") else "/og.png"))
+        urls.append(f'/store/{e["slug"]}/')
+    return urls
+
+
 BRIEFINGS = ROOT / "briefings"
 
 
@@ -1802,7 +1888,7 @@ def main():
         (SITE / "cards" / name).write_bytes(base64.b64decode(data))
 
     write_app_files(tpl, pages)
-    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages)
+    extra_urls = write_courses(tpl, pages) + write_briefings(tpl, pages) + write_store(tpl, pages)
     (SITE / "index.html").write_text(render(items, posts, ok, pages))
     everything = sorted(posts + items, key=lambda i: i["published"], reverse=True)
     (SITE / "feed.xml").write_text(render_rss(everything))
