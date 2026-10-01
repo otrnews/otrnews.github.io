@@ -2167,6 +2167,137 @@ def write_state_jobs(tpl, pages, jobs):
     return urls
 
 
+SOCIAL_FONT_PATHS = ["/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                     "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+                     "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"]
+
+
+def social_font(size):
+    from PIL import ImageFont
+    for p in SOCIAL_FONT_PATHS:
+        if Path(p).exists():
+            return ImageFont.truetype(p, size)
+    try:
+        return ImageFont.load_default(size=size)
+    except TypeError:
+        return ImageFont.load_default()
+
+
+def social_wrap(draw, text, font, width):
+    words, lines, cur = text.split(), [], ""
+    for w in words:
+        t = (cur + " " + w).strip()
+        if draw.textlength(t, font=font) <= width:
+            cur = t
+        else:
+            if cur:
+                lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def make_social_cards(posts):
+    """A 1080x1350 image per story for Instagram/TikTok: photo, topic, big headline, OTR News branding."""
+    try:
+        from PIL import Image, ImageDraw
+    except ImportError:
+        return {}
+    out_dir = SITE / "social"
+    out_dir.mkdir(exist_ok=True)
+    G, DG, A = (0, 96, 60), (0, 64, 40), (242, 176, 30)
+    made = {}
+    for p in posts[:30]:
+        try:
+            W, H = 1080, 1350
+            im = Image.new("RGB", (W, H), DG)
+            d = ImageDraw.Draw(im)
+            src = ROOT / "images" / Path(p.get("image", "")).name if p.get("image", "").startswith("/images/") else None
+            top = 0
+            if src and src.exists():
+                ph = Image.open(src).convert("RGB")
+                ph_h = 760
+                scale = max(W / ph.width, ph_h / ph.height)
+                ph = ph.resize((int(ph.width * scale) + 1, int(ph.height * scale) + 1))
+                l, t = (ph.width - W) // 2, (ph.height - ph_h) // 2
+                im.paste(ph.crop((l, t, l + W, t + ph_h)), (0, 0))
+                top = ph_h
+            else:
+                d.rectangle([0, 0, W, 300], fill=G)
+                top = 300
+            # brand badge
+            bf = social_font(44)
+            bw = int(d.textlength("OTR NEWS", font=bf)) + 64
+            d.rounded_rectangle([48, 48, 48 + bw, 136], radius=18, fill=G, outline="white", width=6)
+            d.text((48 + 32, 66), "OTR NEWS", font=bf, fill="white")
+            # topic + headline (bigger and centered when there's no photo)
+            cf = social_font(38)
+            room = H - top - 48 - 70 - 150
+            for size in ((104, 96, 88, 80, 72, 64) if top == 300 else (78, 70, 64, 58, 52, 46)):
+                hf = social_font(size)
+                lines = social_wrap(d, p["title"], hf, W - 120)
+                if len(lines) * int(size * 1.22) <= room:
+                    break
+            block = 70 + len(lines[:7]) * int(size * 1.22)
+            y = top + 48 if top != 300 else top + max(48, (H - 150 - top - block) // 2)
+            d.text((60, y), (p.get("category") or "Trucking").upper(), font=cf, fill=A)
+            y += 70
+            for ln in lines[:7]:
+                d.text((60, y), ln, font=hf, fill="white")
+                y += int(size * 1.22)
+            # footer
+            d.rectangle([60, H - 118, 260, H - 108], fill=A)
+            ff = social_font(40)
+            d.text((60, H - 92), "Full story: link in bio  \u2022  otrnews.com", font=ff, fill="white")
+            path = out_dir / f'{p["slug"]}.jpg'
+            im.save(path, "JPEG", quality=86, optimize=True)
+            made[p["slug"]] = (f'{SITE_URL}/social/{p["slug"]}.jpg', path.stat().st_size)
+        except Exception as e:
+            print(f"  social card skipped for {p.get('slug')}: {e}", file=sys.stderr)
+    return made
+
+
+def render_story_rss(posts, cards):
+    """Our own stories only, with the social image attached (used by Zapier for Facebook and Instagram)."""
+    out = []
+    for i in posts[:50]:
+        d = format_datetime(datetime.fromisoformat(i["published"]))
+        link = SITE_URL + i["link"]
+        img = ""
+        if i["slug"] in cards:
+            u, n = cards[i["slug"]]
+            img = f'<enclosure url="{esc(u)}" length="{n}" type="image/jpeg"/><media:content url="{esc(u)}" medium="image" type="image/jpeg"/>'
+        out.append(f"<item><title>{esc(i['title'])}</title><link>{esc(link)}</link><guid isPermaLink=\"true\">{esc(link)}</guid>"
+                   f"<pubDate>{d}</pubDate><category>{esc(i['category'])}</category><description>{esc(i['summary'])}</description>{img}</item>")
+    now = format_datetime(datetime.now(timezone.utc))
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>{SITE_NAME}: our stories</title><link>{SITE_URL}/news/</link><description>{esc(TAGLINE)}</description><lastBuildDate>{now}</lastBuildDate>
+{''.join(out)}
+</channel></rss>"""
+
+
+def write_links_page(tpl, pages, posts):
+    """Link-in-bio page for Instagram and TikTok profiles: otrnews.com/links/"""
+    btn = lambda u, t, alt=False: f'<a class="btn{" btn-alt" if alt else ""}" href="{esc(u)}" style="display:block;text-align:center;margin:.6rem 0">{t}</a>'
+    stories = "".join(
+        f'<a href="{p["link"]}" style="display:grid;grid-template-columns:84px 1fr;gap:.8rem;align-items:center;text-decoration:none;color:inherit;margin:.7rem 0">'
+        f'<img src="{esc(thumb_src(p))}" alt="" width="84" height="84" style="width:84px;height:84px;object-fit:cover;border-radius:10px" loading="lazy">'
+        f'<span><span class="fine">{esc(p["category"])}</span><br><strong>{esc(p["title"])}</strong></span></a>' for p in posts[:10])
+    body = ('<h1 style="text-align:center">OTR News</h1><p class="deck" style="text-align:center">Trucking news, CDL jobs, and free CDL courses.</p>'
+            + btn("/jobs/", "Find CDL jobs") + btn("/courses/", "Free CDL courses", True) + btn("/tools/cdl-practice-test/", "Free CDL practice test", True)
+            + (btn(NEWSLETTER_URL, "Get the free CDL Truck Driver Guide", True) if NEWSLETTER_URL else "")
+            + (btn(COMMUNITY_URL, "Join the Driver's Lounge", True) if COMMUNITY_URL else "")
+            + (btn("/store/", "Ebooks &amp; checklists", True) if EBOOKS else "")
+            + btn(TRAINING_URL + ("&" if "?" in TRAINING_URL else "?") + "utm_source=otrnews&utm_medium=bio", "Get your CDL: ELDT theory course", True)
+            + f'<h2 class="section-title">Latest stories</h2>{stories}'
+            + '<p style="text-align:center"><a href="/">More at otrnews.com</a></p>')
+    out = SITE / "links"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "index.html").write_text(shell(tpl, pages, title="OTR News links", path="/links/", body=body,
+        description="Latest OTR News stories, CDL jobs, and free CDL courses.", extra_css='<meta name="robots" content="noindex">'))
+
+
 def main():
     feeds = read_feeds()
     fresh, ok = [], 0
@@ -2316,7 +2447,9 @@ def main():
     (SITE / "index.html").write_text(render(items, posts, ok, pages))
     everything = sorted(posts + items, key=lambda i: i["published"], reverse=True)
     (SITE / "feed.xml").write_text(render_rss(everything))
-    (SITE / "news" / "feed.xml").write_text(render_rss(posts).replace(f"<title>{SITE_NAME}</title>", f"<title>{SITE_NAME}: our stories</title>", 1))
+    cards = make_social_cards(posts)
+    (SITE / "news" / "feed.xml").write_text(render_story_rss(posts, cards))
+    write_links_page(tpl, pages, posts)
     (SITE / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n")
     urls = [f"<url><loc>{SITE_URL}/</loc><changefreq>hourly</changefreq></url>"]
     urls += [f'<url><loc>{SITE_URL}{p["link"]}</loc><lastmod>{p["published"][:10]}</lastmod></url>' for p in posts]

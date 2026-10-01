@@ -79,6 +79,16 @@ inspections and out-of-service trends, driver pay and jobs, parking, diesel pric
 fuel relief, weather and road closures affecting freight, broker and freight-rate changes,
 fraud and cargo theft, registration and authority. Skip stories only executives or investors care about."""
 
+BIG_STORY_ASSIGNMENT = """A big story is breaking right now. Several trucking outlets are covering it:
+{coverage}
+
+Your job: research this story with web search, confirm the key facts from primary sources
+(FMCSA, DOT, the Federal Register, courts, state agencies, or the company involved), and write an
+ORIGINAL explainer for truck drivers and owner-operators. Do not rewrite any one outlet's article.
+Lead with what it means for the reader: who is affected, what changes and when, what it costs them,
+and exactly what they should do now. If facts are still unclear or disputed, say so plainly.
+The title should focus on what it means for drivers, not just repeat the news headline."""
+
 GUIDE_TOPICS = {
     "training": [
         "How to pass the CDL permit (knowledge) test on the first try",
@@ -301,7 +311,13 @@ def main():
     guide = ""
     if GUIDE.exists():
         guide = "\nHouse style from the publisher (follow it):\n" + GUIDE.read_text(encoding="utf-8") + "\n"
-    assignment, categories, guide_topic, section = pick_assignment(now)
+    big = os.environ.get("BIG_STORY", "").strip()
+    if big:
+        assignment = BIG_STORY_ASSIGNMENT.format(coverage=big)
+        categories, guide_topic, section = "Regulations, Freight market, Fuel, Enforcement & safety, Equipment, Drivers, Business", None, None
+        print("Writing a big-story explainer")
+    else:
+        assignment, categories, guide_topic, section = pick_assignment(now)
     if guide_topic:
         categories = categories  # fixed category for guides
     else:
