@@ -8,6 +8,13 @@
  },
  "videos": [
   {
+   "id": "DQPcZySwapA",
+   "title": "Savannah Terminal Hits 60%, $6M Cocaine Seizure, & CMA CGM Acquires FedEx Supply Chain",
+   "channel": "FreightWaves",
+   "published": "2026-10-02T13:31:58+00:00",
+   "summary": "In this episode, we kick things off by examining a massive infrastructure milestone at the Georgia Ports Authority where the $1.6 billion redevelopment of Ocean Terminal has officially surpassed the 60% completion mark. "
+  },
+  {
    "id": "dRTjS04C0Y4",
    "title": "FreightWaves Today | October 1",
    "channel": "FreightWaves",
@@ -64,13 +71,6 @@
    "summary": "AI, carrier vetting and freight-market conditions are shaping transportation technology decisions. Recorded live at McLeod Software\u2019s 2026 User Conference, CEO Tom McLeod joins Transport Topics\u2019 Seth Clevenger to discuss"
   },
   {
-   "id": "xi7U6_f0Kn4",
-   "title": "AI Agents in Trucking: Useful or Just Rebranded Software?",
-   "channel": "FreightWaves",
-   "published": "2026-10-01T15:14:52+00:00",
-   "summary": "AI agents in trucking are here \u2014 but are they solving real freight problems or just rebranding old software? Thomas Wasson breaks down what stood out at Trimble Insight 2026: AI agents, yard flow management, shipper auto"
-  },
-  {
    "id": "tv_bcCKKfqs",
    "title": "RS201: How Can AI and Cameras Enhance Driver Safety?",
    "channel": "Transport Topics",
@@ -85,5 +85,5 @@
    "summary": "As Transport Topics rolls out its redesigned magazine, the RoadSigns podcast marks its own milestone: 200 episodes. What have eight years and hundreds of conversations with trucking executives, technology developers, eco"
   }
  ],
- "updated": "2026-10-02T13:19:10.814187+00:00"
+ "updated": "2026-10-02T15:19:20.920450+00:00"
 }
