@@ -4,7 +4,7 @@ date: 2026-10-02T10:40:56+00:00
 summary: A study guide on what truck lenders weigh, from credit and down payment to the truck itself, plus a checklist to get your paperwork in order before you apply.
 category: Business
 author: OTR News Staff
-draft: true
+draft: false
 photo_idea: semi truck parked at dealership lot
 guide_topic: Financing your first semi truck: what lenders look at and how to prepare
 section: finance
