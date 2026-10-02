@@ -8,6 +8,13 @@
  },
  "videos": [
   {
+   "id": "dRTjS04C0Y4",
+   "title": "FreightWaves Today | October 1",
+   "channel": "FreightWaves",
+   "published": "2026-10-02T06:04:45+00:00",
+   "summary": "Malcolm and Zach talk to Chas Wurster and Daniel Goff from Kodiak. Craig and Julie talk to Kelly Sowderlund from Samsara."
+  },
+  {
    "id": "i3tCnqTlUBc",
    "title": "Playing Defense | Freightonomics",
    "channel": "FreightWaves",
@@ -57,13 +64,6 @@
    "summary": "AI, carrier vetting and freight-market conditions are shaping transportation technology decisions. Recorded live at McLeod Software\u2019s 2026 User Conference, CEO Tom McLeod joins Transport Topics\u2019 Seth Clevenger to discuss"
   },
   {
-   "id": "dRTjS04C0Y4",
-   "title": "FreightWaves Today | October 1",
-   "channel": "FreightWaves",
-   "published": "2026-10-01T16:00:53+00:00",
-   "summary": "Malcolm and Zach talk to Chas Wurster and Daniel Goff from Kodiak. Craig and Julie talk to Kelly Sowderlund from Samsara."
-  },
-  {
    "id": "xi7U6_f0Kn4",
    "title": "AI Agents in Trucking: Useful or Just Rebranded Software?",
    "channel": "FreightWaves",
@@ -85,5 +85,5 @@
    "summary": "As Transport Topics rolls out its redesigned magazine, the RoadSigns podcast marks its own milestone: 200 episodes. What have eight years and hundreds of conversations with trucking executives, technology developers, eco"
   }
  ],
- "updated": "2026-10-02T05:16:51.871202+00:00"
+ "updated": "2026-10-02T07:18:47.384523+00:00"
 }
