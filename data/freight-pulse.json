@@ -1,0 +1,538 @@
+{
+ "updated": "2026-10-02T02:57:20.550399+00:00",
+ "week": "2026-W40",
+ "usda_date": null,
+ "reports": 0,
+ "checks7": 0,
+ "live": false,
+ "regions": {
+  "northeast": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.0,
+    "level": "Normal",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  },
+  "midatlantic": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.0,
+    "level": "Normal",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  },
+  "carolinas": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.0,
+    "level": "Normal",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  },
+  "southeast": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.0,
+    "level": "Normal",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  },
+  "florida": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.0,
+    "level": "Normal",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  },
+  "ohioriver": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.0,
+    "level": "Normal",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  },
+  "greatlakes": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  },
+  "uppermidwest": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  },
+  "southcentral": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.0,
+    "level": "Normal",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 4.0,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  },
+  "mountain": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  },
+  "southwest": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  },
+  "pacificnw": {
+   "van": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "reefer": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   },
+   "flatbed": {
+    "score": 3.5,
+    "level": "Warm",
+    "basis": [],
+    "drivers": {
+     "reports": 0,
+     "hot": 0,
+     "normal": 0,
+     "dead": 0
+    },
+    "rates": null,
+    "activity": null,
+    "usda": null
+   }
+  }
+ }
+}
