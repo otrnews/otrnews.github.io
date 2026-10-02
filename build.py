@@ -18,6 +18,8 @@ from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime, format_datetime
 from pathlib import Path
 
+import freight_pulse   # hot and cold freight zones on the Road conditions page
+
 # ================== SETTINGS: edit these ==================
 SITE_URL = "https://otrnews.com"
 SITE_NAME = "OTR News"
@@ -386,6 +388,10 @@ OTR News is a news website. You can read everything on it without creating an ac
 ## What we collect
 
 We don't ask for your name, email, or any other personal information to read the site, and we don't set advertising cookies.
+
+## Freight Pulse
+
+If you send a freight report on the Road conditions page, or choose to share a load from the load calculator, we receive only your state or the pickup and delivery states, your trailer type, and (for loads) the rate and miles. Your device and network are stored only as scrambled codes used to stop duplicate reports. Reports are deleted after 8 weeks and loads after 60 days. The cost numbers you enter in our calculators stay on your device.
 
 ## Services we rely on
 
@@ -1252,6 +1258,8 @@ LOAD_TOOL = r"""
 <fieldset><legend>Load</legend>
 <label>Rate offered (total $) <input id="ld-rate" inputmode="decimal" placeholder="2400"></label>
 <label>Diesel price ($/gal) <input id="ld-fuel" inputmode="decimal"></label>
+<label>Trailer type <select id="ld-eq"><option value="van">Dry van</option><option value="reefer">Reefer</option><option value="flatbed">Flatbed</option></select></label>
+<label class="share" id="ld-sharebox" hidden><span>Share this load anonymously to help other drivers see where freight is hot. Only the states, trailer type, rate, and miles are shared.</span> <input type="checkbox" id="ld-share" checked></label>
 <button type="button" class="btn" id="ld-go">Map it and check the rate</button>
 </fieldset>
 </div>
@@ -1260,18 +1268,22 @@ LOAD_TOOL = r"""
 <section class="results" id="ld-results" aria-live="polite" hidden>
 <div class="big"><span id="ld-verdict">Profit on this load</span><strong id="ld-profit">—</strong><small id="ld-profit-sub"></small></div>
 <dl>
+<dt>Rate offered</dt><dd id="ld-rateshow">—</dd>
+<dt id="ld-feelabel">Factoring/dispatch fee</dt><dd id="ld-fee">—</dd>
+<dt id="ld-costlabel">Total trip cost</dt><dd id="ld-cost">—</dd>
+<dt><strong>Profit</strong></dt><dd id="ld-net">—</dd>
 <dt>Loaded miles</dt><dd id="ld-loaded">—</dd>
 <dt>Deadhead miles</dt><dd id="ld-dead">—</dd>
 <dt>Rate per loaded mile</dt><dd id="ld-rpm">—</dd>
 <dt>Rate per total mile</dt><dd id="ld-rtm">—</dd>
 <dt>Your break-even per loaded mile</dt><dd id="ld-be">—</dd>
 <dt>Fuel for the trip</dt><dd id="ld-fuelcost">—</dd>
-<dt>Total trip cost</dt><dd id="ld-cost">—</dd>
 <dt>Drive time (about 55 mph)</dt><dd id="ld-time">—</dd>
 </dl>
 <p class="note" id="ld-counter"></p>
+<p class="fine">The fee is the factoring or dispatch percentage you set in <a href="/tools/cost-per-mile/">My costs</a>, taken from the rate offered. Set it to 0 if you don't use either.</p>
 </section>
-<p class="fine">Miles and route are estimates for planning, not navigation. They may differ from PC*MILER or broker miles and may not avoid low bridges, weight limits, or hazmat restrictions. Drive with a truck GPS. Your numbers stay on this device.</p>
+<p class="fine">Miles and route are estimates for planning, not navigation. They may differ from PC*MILER or broker miles and may not avoid low bridges, weight limits, or hazmat restrictions. Drive with a truck GPS. Your cost numbers stay on this device. If you choose to share a load, only the states, trailer type, rate, and miles are sent, with no names or addresses.</p>
 <script>(function(){
 var KEY='otr-cpm-v1',D={miles:10000,dead:12,fuel:5.5,mpg:6.5,truck:2200,trailer:600,ins:1400,permits:150,tech:200,otherfixed:250,maint:.2,tires:.04,tolls:.02,pay:.65,fee:3,profit:15},S={},saved=false;
 try{var o=JSON.parse(localStorage.getItem(KEY)||'{}');for(var k in o){var n=parseFloat(String(o[k]).replace(/[$,%\s]/g,''));if(isFinite(n)){S[k]=n;saved=true;}}}catch(e){}
@@ -1285,10 +1297,11 @@ function showBox(){var s=summary(),m=function(n){return '$'+n.toFixed(2);};
 if(!saved&&!sample){box.innerHTML='<p><strong>Set your costs first.</strong> It takes about 2 minutes, and every load you check after that uses your real numbers.</p>'
 +'<div class="acts"><a class="btn" href="/tools/cost-per-mile/">Set my costs</a><button type="button" class="btn ghost" id="ld-sample">Use sample numbers</button></div>';
 $('ld-sample').addEventListener('click',function(){sample=true;try{localStorage.setItem('otr-load-sample','1');}catch(e){}showBox();});return;}
-box.innerHTML='<p>'+(saved?'Your costs':'Sample costs (not yours)')+'</p><div class="row"><span>Break-even '+m(s.be)+'/loaded mi</span><span>Cost '+m(s.cpm)+'/mi</span><span>Diesel '+m(s.fuel)+'</span></div>'
+box.innerHTML='<p>'+(saved?'Your costs':'Sample costs (not yours)')+'</p><div class="row"><span>Break-even '+m(s.be)+'/loaded mi</span><span>Cost '+m(s.cpm)+'/mi</span><span>Diesel '+m(s.fuel)+'</span><span>Fee '+c('fee')+'%</span><span>Profit goal '+c('profit')+'%</span></div>'
 +'<div class="acts"><a href="/tools/cost-per-mile/">'+(saved?'Edit my costs':'Set my real costs')+'</a></div>';}
 showBox();fuelIn.addEventListener('input',showBox);
-try{var last=JSON.parse(localStorage.getItem('otr-load-v1')||'{}');['from','pick','drop','rate'].forEach(function(k){if(last[k])$('ld-'+k).value=last[k];});}catch(e){}
+try{var last=JSON.parse(localStorage.getItem('otr-load-v1')||'{}');['from','pick','drop','rate','eq'].forEach(function(k){if(last[k])$('ld-'+k).value=last[k];});}catch(e){}
+var FP='__FP__';if(FP)$('ld-sharebox').hidden=false;
 function money(n,d){return (n<0?'-$':'$')+Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});}
 var map=null,layer=null;
 function ensureMap(){if(map||!window.L)return;map=L.map('ld-map',{scrollWheelZoom:false}).setView([39.5,-98.35],4);
@@ -1297,7 +1310,7 @@ ensureMap();
 function geocode(q){return fetch('https://photon.komoot.io/api/?limit=5&lat=39.5&lon=-98.35&q='+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(d){
 var f=(d.features||[]).filter(function(x){var cc=(x.properties.countrycode||'').toUpperCase();return cc==='US'||cc==='CA'||cc==='MX';})[0];
 if(!f)throw new Error('Could not find "'+q+'". Try "City, ST".');var p=f.properties;
-return {lat:f.geometry.coordinates[1],lon:f.geometry.coordinates[0],name:[p.name,p.state].filter(Boolean).join(', ')};});}
+return {lat:f.geometry.coordinates[1],lon:f.geometry.coordinates[0],name:[p.name,p.state].filter(Boolean).join(', '),state:p.state||''};});}
 var ORS='__ORS__';
 function leg(a,b){
 if(ORS){var hgv=function(u){return fetch(u,{method:'POST',headers:{'Content-Type':'application/json','Authorization':ORS},
@@ -1311,7 +1324,7 @@ function car(a,b){return fetch('https://router.project-osrm.org/route/v1/driving
 if(!d.routes||!d.routes.length)throw new Error('No road route found between those places.');return {miles:d.routes[0].distance/1609.344,line:d.routes[0].geometry.coordinates};});}
 function go(){var from=$('ld-from').value.trim(),pick=$('ld-pick').value.trim(),drop=$('ld-drop').value.trim(),rate=parseFloat(($('ld-rate').value||'').replace(/[$,\s]/g,''));
 if(!pick||!drop){$('ld-status').textContent='Enter a pickup and a delivery.';return;}
-try{localStorage.setItem('otr-load-v1',JSON.stringify({from:from,pick:pick,drop:drop,rate:$('ld-rate').value}));}catch(e){}
+try{localStorage.setItem('otr-load-v1',JSON.stringify({from:from,pick:pick,drop:drop,rate:$('ld-rate').value,eq:$('ld-eq').value}));}catch(e){}
 $('ld-status').textContent='Finding the route…';$('ld-go').disabled=true;
 Promise.all([from?geocode(from):null,geocode(pick),geocode(drop)]).then(function(pl){
 return Promise.all([pl[0]?leg(pl[0],pl[1]):null,leg(pl[1],pl[2])]).then(function(lg){return {pl:pl,lg:lg};});}).then(function(r){
@@ -1326,15 +1339,21 @@ var varpm=fpm+c('maint')+c('tires')+c('tolls')+c('pay'),fixedpm=c('miles')>0?(c(
 var cost=total*(varpm+fixedpm),keep=1-Math.min(c('fee'),90)/100;
 var mLoaded=c('miles')*(1-Math.min(c('dead'),95)/100),be=mLoaded>0?(fixedpm*c('miles')+varpm*c('miles'))/mLoaded/keep:0;
 $('ld-loaded').textContent=Math.round(loaded).toLocaleString();$('ld-dead').textContent=Math.round(dead).toLocaleString();
-$('ld-be').textContent=money(be,2);$('ld-fuelcost').textContent=money(total*fpm,0);$('ld-cost').textContent=money(cost,0);
+$('ld-be').textContent=money(be,2);$('ld-fuelcost').textContent=money(total*fpm,0);$('ld-cost').textContent='−'+money(cost,0);
+$('ld-costlabel').textContent='Trip cost ('+Math.round(total).toLocaleString()+' mi × '+money(varpm+fixedpm,2)+')';
+$('ld-feelabel').textContent='Factoring/dispatch fee ('+c('fee')+'%, from My costs)';
 var hrs=total/55,days=Math.max(1,Math.ceil(hrs/11));$('ld-time').textContent=hrs.toFixed(1)+' hrs, about '+days+(days>1?' days':' day')+' under 11-hour driving limits';
 if(rate>0){var net=rate*keep,profit=net-cost;
+$('ld-rateshow').textContent=money(rate,0);$('ld-fee').textContent='−'+money(rate-net,0);$('ld-net').textContent=money(profit,0);
+if(FP&&$('ld-share').checked&&r.pl[1].state){fetch(FP+'/load-check',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,
+body:JSON.stringify({deviceId:(function(){var d;try{d=localStorage.getItem('fp_device');if(!d){d=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2)+Math.random().toString(16).slice(2);localStorage.setItem('fp_device',d);}}catch(e){}return d||'';})(),
+pickupState:r.pl[1].state,deliveryState:r.pl[2].state,equipment:$('ld-eq').value,rateTotal:rate,loadedMiles:Math.round(loaded)})}).catch(function(){});}
 $('ld-rpm').textContent=money(rate/loaded,2);$('ld-rtm').textContent=money(rate/total,2);
 $('ld-profit').textContent=money(profit,0);$('ld-profit').style.color=profit>=0?'':'#B42318';
 $('ld-verdict').textContent=profit>=0?'This load covers your costs':'This load loses money';
 $('ld-profit-sub').textContent=profit>=0?'profit after fees and costs':'after fees and costs';
-var ask=cost/keep/(1-Math.min(c('profit'),90)/100);$('ld-counter').innerHTML='To keep your '+c('profit')+'% profit, counter at <strong>'+money(Math.ceil(ask/25)*25,0)+'</strong> ('+money(ask/loaded,2)+' per loaded mile).';}
-else{['ld-rpm','ld-rtm'].forEach(function(i){$(i).textContent='—';});$('ld-profit').textContent=money(cost,0);$('ld-verdict').textContent='Your cost to run this trip';$('ld-profit-sub').textContent='enter a rate to see profit';
+var ask=Math.ceil(cost/keep/(1-Math.min(c('profit'),90)/100)/25)*25;$('ld-counter').innerHTML='To keep your '+c('profit')+'% profit, counter at <strong>'+money(ask,0)+'</strong> ('+money(ask/loaded,2)+' per loaded mile).';}
+else{['ld-rpm','ld-rtm','ld-rateshow','ld-fee','ld-net'].forEach(function(i){$(i).textContent='—';});$('ld-cost').textContent=money(cost,0);$('ld-profit').textContent=money(cost,0);$('ld-verdict').textContent='Your cost to run this trip';$('ld-profit-sub').textContent='enter a rate to see profit';
 var ask2=cost/keep/(1-Math.min(c('profit'),90)/100);$('ld-counter').innerHTML='Ask for at least <strong>'+money(Math.ceil(ask2/25)*25,0)+'</strong> to keep your '+c('profit')+'% profit.';}
 $('ld-results').hidden=false;$('ld-status').textContent=r.pl.filter(Boolean).map(function(p){return p.name;}).join(' to ');
 }).catch(function(e){$('ld-status').textContent=e.message||'Something went wrong. Check the place names and try again.';}).finally(function(){$('ld-go').disabled=false;});}
@@ -1346,6 +1365,8 @@ document.querySelectorAll('.route input').forEach(function(i){i.addEventListener
 LOAD_CSS = """<style>
 .route input{width:min(14rem,55vw);text-align:left}
 .route .btn{margin-top:.6rem;width:100%}
+.route select{width:min(14rem,55vw);font:600 1.05rem var(--font);padding:.45rem .6rem .35rem;border:1.5px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
+.route .share{font-size:.9rem;color:var(--muted)}.route .share input{width:auto;transform:scale(1.4)}
 .mapbox{border:2px solid var(--sign);border-radius:14px;overflow:hidden;margin:.5rem 0 1rem}
 #ld-map{height:min(60vh,420px)}
 </style>"""
@@ -1354,7 +1375,7 @@ LOAD_CSS = """<style>
 def write_load_tool(tpl, pages):
     out = SITE / "tools" / "load-calculator"
     out.mkdir(parents=True, exist_ok=True)
-    body = (LOAD_TOOL.replace("__ORS__", ORS_API_KEY)
+    body = (LOAD_TOOL.replace("__ORS__", ORS_API_KEY).replace("__FP__", freight_pulse.FREIGHT_PULSE_URL.rstrip("/"))
             + '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">'
               '<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>'
             + "".join(partner_box(p) for p in partners_for("calculator")[:2]))
@@ -2359,8 +2380,9 @@ def write_traffic(tpl, pages, items, posts):
     news = [p for p in posts if p["category"] == "Enforcement & safety"][:3] + \
            [i for i in items if i.get("category") == "Enforcement & safety" and not i.get("original")][:8]
     parking = partner_named("Truck Parking Club")
+    fp_html, fp_css = freight_pulse.write_section()
     body = f"""<h1>Road conditions</h1>
-<p class="deck">Live traffic, weather radar, and state road reports for the routes you drive. Check before you roll, not while you drive.</p>
+<p class="deck">Live traffic, weather radar, freight hot and cold zones, and state road reports for the routes you drive. Check before you roll, not while you drive.</p>
 <h2 class="section-title">Live traffic</h2>
 <p class="fine">Crashes, slowdowns, closures, and police reports from Waze drivers. Pick a region or drag the map.</p>
 <div class="maptools" id="trafficbtns">{btns}</div>
@@ -2371,6 +2393,7 @@ def write_traffic(tpl, pages, items, posts):
 <p class="fine">Rain and snow over the last two hours. <span class="radar-time" id="radartime"></span></p>
 <div class="mapbox"><div id="radar" role="img" aria-label="Animated weather radar map"></div></div>
 <p class="fine">Radar by <a href="https://www.rainviewer.com" target="_blank" rel="noopener">RainViewer</a>. Severe weather alerts: <a href="https://www.weather.gov" target="_blank" rel="noopener">National Weather Service</a>.</p>
+{fp_html}
 <h2 class="section-title">State road reports (511)</h2>
 <div class="body"><p>Chain laws, closures, construction, and weigh station status come from each state. The Federal Highway Administration keeps
 <a href="https://www.fhwa.dot.gov/trafficinfo/" target="_blank" rel="noopener">every state's 511 road report in one list</a>. On the road, you can also dial <strong>511</strong> in most states.</p></div>
@@ -2396,7 +2419,7 @@ show(i);if(!still)setInterval(function(){{i=(i+1)%fr.length;show(i);}},700);}}).
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(shell(tpl, pages, title="Road conditions: live traffic and weather radar for truckers",
         description="Live traffic, weather radar, and links to every state's 511 road report, for truck drivers planning their route.",
-        path="/traffic/", body=body, extra_css=TRAFFIC_CSS))
+        path="/traffic/", body=body, extra_css=TRAFFIC_CSS + fp_css))
     return ["/traffic/"]
 
 
