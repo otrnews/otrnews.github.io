@@ -4,7 +4,7 @@ date: 2026-10-02T21:45:57+00:00
 summary: Trump's Denton stop announced no new tariff or rule. The 25% truck tariff and the 2027 emissions changes still matter if you plan to buy a new truck.
 category: Equipment
 author: OTR News Staff
-draft: true
+draft: false
 photo_idea: new semi trucks at dealer lot
 image: /images/2026-10-02-peterbilt-visit-changed-no-rules-but-truck-tariffs-still-sha.jpg
 image_alt: truck, road, car dealer, ride, business, small truck, men, truck, truck, small truck, small truck, small truck, small truck, small truck
