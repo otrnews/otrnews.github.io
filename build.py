@@ -22,6 +22,10 @@ import freight_pulse   # hot and cold freight zones on the Road conditions page
 
 # ================== SETTINGS: edit these ==================
 SITE_URL = "https://otrnews.com"
+# CDL practice tests and courses now live on CDLPermits.com
+CDLP = "https://cdlpermits.com"
+CDLP_TESTS = CDLP + "/"
+CDLP_COURSE = CDLP + "/free-cdl-course"
 SITE_NAME = "OTR News"
 TAGLINE = "Trucking news for owner-operators, small fleets, and drivers."
 CONTACT_EMAIL = "news@otrnews.com"   # turns on the Contact page ("" to hide)
@@ -1085,8 +1089,8 @@ def section_page(key, posts, items=()):
 
 # ---------- navigation, topics, tools ----------
 
-NAV = [("/", "OTR News"), ("/industry/", "Around the industry"), ("/tools/cdl-practice-test/", "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/guides/", "Guides"), ("/jobs/", "Jobs"),
-       ("/tools/cost-per-mile/", "Cost per mile"), ("/tools/load-calculator/", "Load calculator"), ("/courses/", "Courses"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/traffic/", "Road conditions"), ("/about/", "About")]
+NAV = [("/", "OTR News"), ("/industry/", "Around the industry"), (CDLP_TESTS, "CDL practice test"), ("/topics/regulations/", "Regulations"), ("/guides/", "Guides"), ("/jobs/", "Jobs"),
+       ("/tools/cost-per-mile/", "Cost per mile"), ("/tools/load-calculator/", "Load calculator"), (CDLP_COURSE, "Courses"), ("/toolkit/", "Toolkit"), ("/training/", "Get your CDL"), ("/traffic/", "Road conditions"), ("/about/", "About")]
 
 
 def has_videos():
@@ -1097,7 +1101,7 @@ def has_videos():
         return False
 
 
-NAV_PRIMARY = ["/", "/industry/", "/jobs/", "/courses/", "/store/"]   # always shown; the rest go under "More" on phones
+NAV_PRIMARY = ["/", "/industry/", "/jobs/", CDLP_COURSE, "/store/"]   # always shown; the rest go under "More" on phones
 NAV_CSS = """<style>
 .sitenav .nav-more{font:inherit;font-weight:inherit;line-height:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;align-self:baseline;-webkit-appearance:none;appearance:none}
 .sitenav .nav-more.here{text-decoration:underline;text-decoration-color:#F2B01E;text-decoration-thickness:3px;text-underline-offset:8px}
@@ -1397,7 +1401,7 @@ def footer_links(pages):
     links = [("/about/", "About")]
     if "contact" in pages:
         links.append(("/contact/", "Contact"))
-    links += ([(COMMUNITY_URL, "Driver's Lounge")] if COMMUNITY_URL else []) + ([(COMMUNITY_HOME_URL, "Member login")] if COMMUNITY_HOME_URL else []) + [("/briefing/", "Briefing"), ("/courses/", "Free courses"), ("/app/", "Get the app"), ("/privacy/", "Privacy"), ("/feed.xml", "RSS")]
+    links += ([(COMMUNITY_URL, "Driver's Lounge")] if COMMUNITY_URL else []) + ([(COMMUNITY_HOME_URL, "Member login")] if COMMUNITY_HOME_URL else []) + [("/briefing/", "Briefing"), (CDLP_COURSE, "Free courses"), ("/app/", "Get the app"), ("/privacy/", "Privacy"), ("/feed.xml", "RSS")]
     out = "&ensp;".join(f'<a href="{u}">{t}</a>' for u, t in links)
     names = {"facebook": "Facebook", "instagram": "Instagram", "youtube": "YouTube", "tiktok": "TikTok", "x.com": "X", "twitter": "X", "linkedin": "LinkedIn"}
     social = [(u, next((n for k, n in names.items() if k in u), "Social")) for u in SOCIAL_PROFILES]
@@ -1466,8 +1470,8 @@ def toolkit_body():
     return (f"""<h1>Driver toolkit</h1>
 <p class="deck">Services we recommend for owner-operators and small fleets, plus our own free tools.</p>
 <p class="fine">Some links on this page are partner links. OTR News may earn a commission if you sign up, at no cost to you. Partners never pay for news coverage, and our reporting is written independently.</p>
-<section class="tool-card"><h2>CDL practice test</h2><p>Free. Test yourself on general knowledge, air brakes, and combination vehicles.</p>
-<a class="btn" href="/tools/cdl-practice-test/">Take the test</a></section>
+<section class="tool-card"><h2>CDL practice tests and course</h2><p>Free at CDLPermits.com: practice tests for every CDL knowledge test, a 12-lesson course, and a Spanish version.</p>
+<a class="btn" href="https://cdlpermits.com/">Go to CDLPermits.com</a></section>
 <section class="tool-card"><h2>Cost per mile calculator</h2><p>Free. Find your break-even rate before you take the load.</p>
 <a class="btn" href="/tools/cost-per-mile/">Open the calculator</a></section>
 """ + "".join(cards) + training_box())
@@ -1515,7 +1519,7 @@ Both must come from a provider listed on FMCSA's **Training Provider Registry**.
 - **Check the Registry.** Look up any school or online course at tpr.fmcsa.dot.gov before you pay.
 - **Get your CLP first**, if your state requires it before training.
 - **Ask about employer programs.** Some carriers and city or county employers cover training costs for new drivers.
-- **Test yourself.** Take our [free CDL practice test](/tools/cdl-practice-test/) to see where you stand.
+- **Test yourself.** Take a [free CDL practice test](https://cdlpermits.com/) to see where you stand.
 
 ## Start your theory training
 
@@ -1783,7 +1787,7 @@ def question_of_the_day():
 <h2>{esc(q)}</h2>
 <div class="qd-answers">{btns}</div>
 <p class="qd-why" hidden><strong class="qd-verdict"></strong> {esc(why)}</p>
-<a class="more-link" href="/tools/cdl-practice-test/">Take the full practice test</a>
+<a class="more-link" href="https://cdlpermits.com/">Take the full test at CDLPermits.com</a>
 <script>
 (function(){{
   var box = document.currentScript.parentNode;
@@ -1812,8 +1816,7 @@ def jobs_strip(n=5):
 
 
 def tools_strip():
-    tiles = [("/courses/", "Free CDL courses", "12 lessons with quizzes"),
-             ("/tools/cdl-practice-test/", "CDL practice test", f"{len(QUIZ)} questions with explanations"),
+    tiles = [(CDLP_TESTS, "Getting your CDL?", "Free tests and course at CDLPermits.com"),
              ("/tools/cost-per-mile/", "Cost per mile", "Find your break-even rate"),
              ("/tools/load-calculator/", "Load calculator", "Map the miles, check the rate"),
              ("/guides/", "Guides", "Money, health, repairs, jobs"),
@@ -1919,7 +1922,7 @@ def write_app_files(tpl, pages):
                 "icons": [{"src": "/app-192.png", "sizes": "192x192", "type": "image/png"},
                           {"src": "/app-512.png", "sizes": "512x512", "type": "image/png"},
                           {"src": "/app-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}],
-                "shortcuts": [{"name": "Job board", "url": "/jobs/"}, {"name": "CDL practice test", "url": "/tools/cdl-practice-test/"},
+                "shortcuts": [{"name": "Job board", "url": "/jobs/"}, {"name": "CDL practice test", "url": "https://cdlpermits.com/"},
                               {"name": "Guides", "url": "/guides/"}]}
     (SITE / "manifest.webmanifest").write_text(json.dumps(manifest, indent=1))
     (SITE / "sw.js").write_text(SW_JS)
@@ -2024,58 +2027,32 @@ def course_card(c):
             f'<a class="btn" href="/courses/{c["slug"]}/">Start course</a></section>')
 
 
+LESSON_MOVES = {"vehicle-inspection": "/cdl-course-vehicle-inspection", "seeing-space-speed": "/cdl-course-speed-and-space",
+                "hazards-and-emergencies": "/cdl-course-emergencies", "rules-for-cdl-drivers": "/cdl-course-cdl-basics",
+                "air-brakes": "/cdl-course-air-brakes", "combination-vehicles": "/cdl-course-combination-vehicles"}
+
+
+def redirect_page(folder, target):
+    """Old page that moved to CDLPermits.com: send visitors (and Google) to the new address."""
+    folder.mkdir(parents=True, exist_ok=True)
+    t = esc(target)
+    (folder / "index.html").write_text(f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Moved to CDLPermits.com</title><link rel="canonical" href="{t}"><meta http-equiv="refresh" content="0; url={t}">
+<meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body><p>This page moved to <a href="{t}">CDLPermits.com</a>.</p><script>location.replace("{t}")</script></body></html>""")
+
+
 def write_courses(tpl, pages):
-    if not COURSES:
-        return []
-    urls = ["/courses/"]
+    """Courses moved to CDLPermits.com. Old course and lesson addresses redirect there."""
     out = SITE / "courses"
-    out.mkdir(parents=True, exist_ok=True)
-    body = ('<h1>Free CDL courses</h1><p class="deck">Short lessons with quizzes on the three CDL knowledge tests most drivers take: '
-            'general knowledge, air brakes, and combination vehicles. Free, no signup, study on your phone.</p>'
-            + "".join(course_card(c) for c in COURSES) + COURSE_NOTE
-            + '<p><a class="btn btn-alt" href="/tools/cdl-practice-test/">Take the full practice test</a></p>' + community_box() + training_box() + PROGRESS_JS)
-    (out / "index.html").write_text(shell(tpl, pages, title="Free CDL courses: general knowledge, air brakes, combination vehicles",
-        description="Free CDL study courses with short lessons and quizzes on general knowledge, air brakes, and combination vehicles.",
-        path="/courses/", body=body, extra_css=COURSE_CSS))
-    for c in COURSES:
-        ids = " ".join(lesson_id(c, l) for l in c["lessons"])
-        items = "".join(f'<li><a href="/courses/{c["slug"]}/{l["slug"]}/" data-lesson="{esc(lesson_id(c, l))}"><span class="num">{n + 1}</span>'
-                        f'<strong>{esc(l["title"])}</strong><span class="sub">{len(l["quiz"])} quiz questions</span></a></li>'
-                        for n, l in enumerate(c["lessons"]))
-        cbody = (f'<p class="meta"><a class="cat" href="/courses/">Free CDL courses</a></p><h1>{esc(c["title"])}</h1><p class="deck">{esc(c["blurb"])}</p>'
-                 f'<div data-course data-lessons="{esc(ids)}"><div class="progress"><i></i></div><p class="fine ptext"></p></div>'
-                 f'<ol class="course-list">{items}</ol>'
-                 f'<a class="btn" href="/courses/{c["slug"]}/{c["lessons"][0]["slug"]}/">Start lesson 1</a>'
-                 + course_finish_box(c, hidden=True) + COURSE_NOTE + training_box() + PROGRESS_JS)
-        d = out / c["slug"]
-        d.mkdir(parents=True, exist_ok=True)
-        (d / "index.html").write_text(shell(tpl, pages, title=f'{c["title"]}: free CDL course', description=c["blurb"],
-            path=f'/courses/{c["slug"]}/', body=cbody, extra_css=COURSE_CSS))
-        urls.append(f'/courses/{c["slug"]}/')
-        for n, l in enumerate(c["lessons"]):
-            prev_l = c["lessons"][n - 1] if n else None
-            next_l = c["lessons"][n + 1] if n + 1 < len(c["lessons"]) else None
-            nav = '<nav class="lesson-nav">'
-            nav += (f'<a class="btn btn-alt" href="/courses/{c["slug"]}/{prev_l["slug"]}/">&larr; {esc(prev_l["title"])}</a>' if prev_l
-                    else f'<a class="btn btn-alt" href="/courses/{c["slug"]}/">&larr; Course overview</a>')
-            nav += (f'<a class="btn" href="/courses/{c["slug"]}/{next_l["slug"]}/">Next: {esc(next_l["title"])} &rarr;</a>' if next_l
-                    else f'<a class="btn" href="/courses/{c["slug"]}/">Course overview</a>')
-            nav += '</nav>'
-            lbody = (f'<article><p class="meta"><a class="cat" href="/courses/{c["slug"]}/">{esc(c["title"])}</a> <span>Lesson {n + 1} of {len(c["lessons"])}</span></p>'
-                     f'<h1>{esc(l["title"])}</h1><div class="body">{markdown(l["body"].strip())}</div></article>'
-                     + lesson_quiz_html(c, l) + (course_finish_box(c) if not next_l else "") + nav + newsletter_box()
-                     + (training_box() if next_l else ""))
-            ld = {"@context": "https://schema.org", "@type": "LearningResource", "name": l["title"], "educationalLevel": "Beginner",
-                  "learningResourceType": "Lesson", "isAccessibleForFree": True, "inLanguage": "en-US",
-                  "isPartOf": {"@type": "Course", "name": c["title"], "description": c["blurb"],
-                               "provider": {"@type": "Organization", "name": SITE_NAME, "sameAs": SITE_URL}}}
-            ld_dir = d / l["slug"]
-            ld_dir.mkdir(parents=True, exist_ok=True)
-            (ld_dir / "index.html").write_text(shell(tpl, pages, title=f'{l["title"]} | {c["title"]}',
-                description=f'Free CDL lesson: {l["title"].lower()}. Short lesson and {len(l["quiz"])}-question quiz.',
-                path=f'/courses/{c["slug"]}/{l["slug"]}/', body=lbody, ld=ld, extra_css=COURSE_CSS))
-            urls.append(f'/courses/{c["slug"]}/{l["slug"]}/')
-    return urls
+    redirect_page(out, CDLP_COURSE)
+    for c in COURSES or []:
+        course_target = CDLP + LESSON_MOVES[c["slug"]] if c["slug"] in LESSON_MOVES else CDLP_COURSE
+        redirect_page(out / c["slug"], course_target)
+        for l in c["lessons"]:
+            target = CDLP + LESSON_MOVES.get(l["slug"], LESSON_MOVES.get(c["slug"], "/free-cdl-course"))
+            redirect_page(out / c["slug"] / l["slug"], target)
+    return []
 
 
 try:
@@ -2685,7 +2662,7 @@ def write_links_page(tpl, pages, posts):
         f'<img src="{esc(thumb_src(p))}" alt="" width="84" height="84" style="width:84px;height:84px;object-fit:cover;border-radius:10px" loading="lazy">'
         f'<span><span class="fine">{esc(p["category"])}</span><br><strong>{esc(p["title"])}</strong></span></a>' for p in posts[:10])
     body = ('<h1 style="text-align:center">OTR News</h1><p class="deck" style="text-align:center">Trucking news, CDL jobs, and free CDL courses.</p>'
-            + btn("/jobs/", "Find CDL jobs") + btn("/courses/", "Free CDL courses", True) + btn("/tools/cdl-practice-test/", "Free CDL practice test", True)
+            + btn("/jobs/", "Find CDL jobs") + btn(CDLP_COURSE, "Free CDL course", True) + btn(CDLP_TESTS, "Free CDL practice tests", True)
             + (btn(NEWSLETTER_URL, "Get the free CDL Truck Driver Guide", True) if NEWSLETTER_URL else "")
             + (btn(COMMUNITY_URL, "Join the Driver's Lounge", True) if COMMUNITY_URL else "")
             + (btn("/store/", "Ebooks &amp; checklists", True) if EBOOKS else "")
@@ -2769,12 +2746,7 @@ def main():
         description="Free cost per mile and break-even rate calculator for owner-operators and small fleets.",
         path="/tools/cost-per-mile/", body=COST_TOOL + "".join(partner_box(p) for p in partners_for("calculator")[:2]),
         extra_css=TOOL_CSS))
-    out = SITE / "tools" / "cdl-practice-test"
-    out.mkdir(parents=True, exist_ok=True)
-    qjson = json.dumps(QUIZ).replace("</", "<\\/")
-    (out / "index.html").write_text(shell(tpl, pages, title="Free CDL practice test: general knowledge, air brakes, combination vehicles",
-        description=f"Free CDL practice test with {len(QUIZ)} questions and explanations. See if you'd pass the CDL knowledge test.",
-        path="/tools/cdl-practice-test/", body=QUIZ_HTML.replace("%QUIZ_JSON%", qjson) + training_box(), extra_css=QUIZ_CSS))
+    redirect_page(SITE / "tools" / "cdl-practice-test", CDLP_TESTS)  # practice test moved to CDLPermits.com
     gl = []
     for key in SECTIONS:
         title, intro, body = section_page(key, posts, items)
@@ -2863,7 +2835,6 @@ def main():
     urls.append(f"<url><loc>{SITE_URL}/toolkit/</loc></url>")
     urls.append(f"<url><loc>{SITE_URL}/guides/</loc></url>")
     urls += [f"<url><loc>{SITE_URL}/{k}/</loc></url>" for k in SECTIONS if k != "training"]
-    urls.append(f"<url><loc>{SITE_URL}/tools/cdl-practice-test/</loc></url>")
     urls.append(f"<url><loc>{SITE_URL}/app/</loc></url>")
     urls += [f"<url><loc>{SITE_URL}{u}</loc></url>" for u in extra_urls]
     urls += [f"<url><loc>{SITE_URL}/jobs/{j['slug']}/</loc></url>" for j in load_jobs()[1][:150]]
