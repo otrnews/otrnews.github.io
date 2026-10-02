@@ -47,6 +47,9 @@ jobs:
 
       - name: Pull latest headlines and build site
         run: python build.py
+        env:
+          USDA_API_KEY: ${{ secrets.USDA_API_KEY }}
+
 
       - name: Big-story alert
         id: big
