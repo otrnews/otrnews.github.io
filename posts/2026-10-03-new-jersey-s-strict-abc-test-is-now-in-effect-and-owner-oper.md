@@ -4,7 +4,7 @@ date: 2026-10-03T10:53:15+00:00
 summary: New Jersey's rules on who counts as an independent contractor took effect Oct. 1 after the governor refused to delay them. Owner-operators and carriers running in the state should check their setups.
 category: Regulations
 author: OTR News Staff
-draft: true
+draft: false
 photo_idea: semi truck on New Jersey highway
 image: /images/2026-10-03-new-jersey-s-strict-abc-test-is-now-in-effect-and-owner-oper.jpg
 image_alt: transportation, driving, freeway, trucking, transport, highway, semi, truck, storm, trucking, trucking, truck, truck, truck, truck, truck
