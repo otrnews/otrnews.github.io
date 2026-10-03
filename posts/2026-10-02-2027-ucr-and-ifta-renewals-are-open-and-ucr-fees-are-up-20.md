@@ -4,7 +4,7 @@ date: 2026-10-02T22:40:54+00:00
 summary: The 2027 renewal window opened Oct. 1. UCR fees rise about 20% this year, and the filing deadline is Dec. 31. Check your IFTA and state renewal dates too.
 category: Regulations
 author: OTR News Staff
-draft: true
+draft: false
 photo_idea: semi truck at weigh station
 image: /images/2026-10-02-2027-ucr-and-ifta-renewals-are-open-and-ucr-fees-are-up-20.jpg
 image_alt: truck, truck mounted crane, semi-trailer, trucks, yellow, mercedes
